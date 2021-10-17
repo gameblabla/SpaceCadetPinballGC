@@ -2,7 +2,7 @@
 #include "gdrv.h"
 #include "maths.h"
 #include "zdrv.h"
-
+#include <SDL/SDL_mixer.h>
 
 class DatFile;
 

@@ -100,7 +100,7 @@ Mix_Music* midi::load_track(std::string fileName)
 	{
 		if (i == 0)
 		{
-			auto filePath = basePath + ".MID";
+			auto filePath = basePath + ".ogg";
 			auto fileHandle = fopen(filePath.c_str(), "rb");
 			if (fileHandle)
 			{
@@ -110,19 +110,19 @@ Mix_Music* midi::load_track(std::string fileName)
 		}
 		else
 		{
-			auto midi = MdsToMidi(basePath + ".MDS");
-			if (midi)
-			{
-				// Dump converted MIDI file
-				/*auto filePath = basePath + ".midi";
-				FILE* fileHandle = fopen(filePath.c_str(), "wb");
-				fwrite(midi->data(), 1, midi->size(), fileHandle);
-				fclose(fileHandle);*/
+			// auto midi = MdsToMidi(basePath + ".MDS");
+			// if (midi)
+			// {
+			// 	// Dump converted MIDI file
+			// 	/*auto filePath = basePath + ".midi";
+			// 	FILE* fileHandle = fopen(filePath.c_str(), "wb");
+			// 	fwrite(midi->data(), 1, midi->size(), fileHandle);
+			// 	fclose(fileHandle);*/
 
-				auto rw = SDL_RWFromMem(midi->data(), static_cast<int>(midi->size()));
-				audio = Mix_LoadMUS_RW(rw, 1); // This call seems to leak memory no matter what.
-				delete midi;
-			}
+			// 	auto rw = SDL_RWFromMem(midi->data(), static_cast<int>(midi->size()));
+			// 	audio = Mix_LoadMUS_RW(rw, 1); // This call seems to leak memory no matter what.
+			// 	delete midi;
+			// }
 		}
 	}
 

@@ -8,7 +8,7 @@ int* Sound::TimeStamps = nullptr;
 
 bool Sound::Init(int channels, bool enableFlag)
 {
-	Mix_Init(MIX_INIT_MID);
+	Mix_Init(MIX_INIT_OGG);
 	auto result = Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
 	SetChannels(channels);
 	Enable(enableFlag);

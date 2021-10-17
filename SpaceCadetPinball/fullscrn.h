@@ -17,20 +17,14 @@ public:
 	static const resolution_info resolution_array[3];
 	static float ScaleX;
 	static float ScaleY;
-	static int OffsetX;
-	static int OffsetY;
+	static Sint16 OffsetX;
+	static Sint16 OffsetY;
 
 	static void init();
-	static void shutdown();
-	static int set_screen_mode(int isFullscreen);
-	static void activate(int flag);
 	static int GetResolution();
 	static void SetResolution(int value);
 	static int GetMaxResolution();
 	static void window_size_changed();
 private :
 	static int resolution;
-
-	static int enableFullscreen();
-	static int disableFullscreen();
 };

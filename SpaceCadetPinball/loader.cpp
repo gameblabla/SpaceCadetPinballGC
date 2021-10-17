@@ -5,7 +5,7 @@
 #include "pinball.h"
 #include "Sound.h"
 #include "zdrv.h"
-
+#include "math.h"
 
 errorMsg loader::loader_errors[] =
 {
@@ -62,7 +62,8 @@ int loader::error(int errorCode, int captionCode)
 
 	if (!errorText)
 		errorText = loader_errors[index].Message;
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, errorCaption, errorText, nullptr);
+
+	fprintf(stderr, "%s %s", errorCaption, errorText);
 	return -1;
 }
 

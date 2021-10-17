@@ -3,7 +3,6 @@
 #include "GroupData.h"
 
 #include "EmbeddedData.h"
-#include "fullscrn.h"
 #include "gdrv.h"
 #include "pb.h"
 #include "pinball.h"
@@ -112,7 +111,7 @@ void GroupData::SplitSplicedBitmap(const gdrv_bitmap8& srcBmp, gdrv_bitmap8& bmp
 	zdrv::fill(&zMap, zMap.Width, zMap.Height, 0, 0, 0xFFFF);
 	zMap.Resolution = srcBmp.Resolution;
 
-	auto tableWidth = fullscrn::resolution_array[srcBmp.Resolution].TableWidth;
+	auto tableWidth = 640;
 	auto src = reinterpret_cast<uint16_t*>(srcBmp.IndexedBmpPtr);
 	auto srcChar = reinterpret_cast<char**>(&src);
 	for (int dstInd = 0;;)
@@ -272,13 +271,13 @@ char* DatFile::field_labeled(LPCSTR lpString, FieldTypes fieldType)
 gdrv_bitmap8* DatFile::GetBitmap(int groupIndex)
 {
 	auto group = Groups[groupIndex];
-	return group->GetBitmap(fullscrn::GetResolution());
+	return group->GetBitmap(0);
 }
 
 zmap_header_type* DatFile::GetZMap(int groupIndex)
 {
 	auto group = Groups[groupIndex];
-	return group->GetZMap(fullscrn::GetResolution());
+	return group->GetZMap(0);
 }
 
 void DatFile::Finalize()
@@ -289,13 +288,13 @@ void DatFile::Finalize()
 		assertm(groupIndex < 0, "DatFile: pbmsg_ft is already in .dat");
 
 		// Load 3DPB font into dat to simplify pipeline
-		auto rcData = reinterpret_cast<MsgFont*>(ImFontAtlas::DecompressCompressedBase85Data(
-			EmbeddedData::PB_MSGFT_bin_compressed_data_base85));
-		AddMsgFont(rcData, "pbmsg_ft");
-		IM_FREE(rcData);
+		// auto rcData = reinterpret_cast<MsgFont*>(ImFontAtlas::DecompressCompressedBase85Data(
+		// 	EmbeddedData::PB_MSGFT_bin_compressed_data_base85));
+		// AddMsgFont(rcData, "pbmsg_ft");
+		// IM_FREE(rcData);
 
 		// PINBALL2.MID is an alternative font provided in 3DPB data
-		/*auto file = pinball::make_path_name("PINBALL2.MID");
+		auto file = pinball::make_path_name("PINBALL2.MID");
 		auto fileHandle = fopen(file.c_str(), "rb");
 		fseek(fileHandle, 0, SEEK_END);
 		auto fileSize = static_cast<uint32_t>(ftell(fileHandle));
@@ -304,7 +303,7 @@ void DatFile::Finalize()
 		fread(rcData, 1, fileSize, fileHandle);
 		fclose(fileHandle);
 		AddMsgFont(rcData, "pbmsg_ft");
-		delete[] rcData;*/
+		delete[] rcData;
 	}
 
 	for (auto group : Groups)

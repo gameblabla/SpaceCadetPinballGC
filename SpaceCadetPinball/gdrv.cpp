@@ -72,10 +72,10 @@ gdrv_bitmap8::~gdrv_bitmap8()
 {
 	if (BitmapType != BitmapTypes::None)
 	{
+		if (Texture)
+			SDL_FreeSurface(Texture);
 		delete[] BmpBufPtr1;
 		delete[] IndexedBmpPtr;
-		if (Texture)
-			SDL_DestroyTexture(Texture);
 	}
 }
 
@@ -210,13 +210,18 @@ void gdrv::CreatePreview(gdrv_bitmap8& bmp)
 	if (bmp.Texture)
 		return;
 
-	auto texture = SDL_CreateTexture
+	auto texture = SDL_CreateRGBSurfaceFrom
 	(
-		winmain::Renderer,
-		SDL_PIXELFORMAT_ARGB8888,
-		SDL_TEXTUREACCESS_STATIC,
-		bmp.Width, bmp.Height
+		bmp.BmpBufPtr1,
+		bmp.Width,
+		bmp.Height,
+		32,
+		bmp.Width * 4,
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
 	);
-	SDL_UpdateTexture(texture, nullptr, bmp.BmpBufPtr1, bmp.Width * 4);
+
 	bmp.Texture = texture;
 }

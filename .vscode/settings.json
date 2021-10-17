@@ -4,6 +4,7 @@
         "wiiuse.h": "c",
         "gccore.h": "c",
         "math.h": "c",
-        "string": "cpp"
+        "string": "cpp",
+        "cmath": "cpp"
     }
 }

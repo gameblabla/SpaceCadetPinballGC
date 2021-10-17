@@ -15,7 +15,7 @@ float render::zscaler, render::zmin, render::zmax;
 rectangle_type render::vscreen_rect;
 gdrv_bitmap8 *render::vscreen, *render::background_bitmap, *render::ball_bitmap[20];
 zmap_header_type* render::zscreen;
-SDL_Texture* render::vScreenTex = nullptr;
+SDL_Surface* render::vScreenTex = nullptr;
 SDL_Rect render::DestinationRect{};
 
 void render::init(gdrv_bitmap8* bmp, float zMin, float zScaler, int width, int height)
@@ -41,17 +41,17 @@ void render::init(gdrv_bitmap8* bmp, float zMin, float zScaler, int width, int h
 	else
 		gdrv::fill_bitmap(vscreen, vscreen->Width, vscreen->Height, 0, 0, 0);
 
-	{
-		UsingSdlHint hint{SDL_HINT_RENDER_SCALE_QUALITY, options::Options.LinearFiltering ? "linear" : "nearest"};
-		vScreenTex = SDL_CreateTexture
-		(
-			winmain::Renderer,
-			SDL_PIXELFORMAT_ARGB8888,
-			SDL_TEXTUREACCESS_STREAMING,
-			width, height
-		);
-		SDL_SetTextureBlendMode(vScreenTex, SDL_BLENDMODE_NONE);
-	}
+	vScreenTex = SDL_CreateRGBSurface
+	(
+		0,
+		width,
+		height,
+		32,
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
+	);
 }
 
 void render::uninit()
@@ -67,7 +67,7 @@ void render::uninit()
 	ball_list.clear();
 	dirty_list.clear();
 	sprite_list.clear();
-	SDL_DestroyTexture(vScreenTex);
+	SDL_FreeSurface(vScreenTex);
 }
 
 void render::update()
@@ -433,109 +433,12 @@ void render::build_occlude_list()
 	delete spriteArr;
 }
 
-void render::SpriteViewer(bool* show)
-{
-	static const char* BitmapTypes[] =
-	{
-		"None",
-		"RawBitmap",
-		"DibBitmap",
-		"Spliced",
-	};
-	static float scale = 1.0f;
-	auto uv_min = ImVec2(0.0f, 0.0f); // Top-left
-	auto uv_max = ImVec2(1.0f, 1.0f); // Lower-right
-	auto tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // No tint
-	auto border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
-
-	if (ImGui::Begin("Sprite viewer", show, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar))
-	{
-		if (ImGui::BeginMenuBar())
-		{
-			ImGui::SliderFloat("Sprite scale", &scale, 0.1f, 10.0f, "scale = %.3f");
-			ImGui::EndMenuBar();
-		}
-
-		for (const auto group : pb::record_table->Groups)
-		{
-			bool emptyGroup = true;
-			for (int i = 0; i <= 2; i++)
-			{
-				auto bmp = group->GetBitmap(i);
-				if (bmp)
-				{
-					emptyGroup = false;
-					break;
-				}
-			}
-			if (emptyGroup)
-				continue;
-
-			ImGui::Text("Group: %d, name:%s", group->GroupId, group->GroupName.c_str());
-			for (int i = 0; i <= 2; i++)
-			{
-				auto bmp = group->GetBitmap(i);
-				if (!bmp)
-					continue;
-
-				auto type = BitmapTypes[static_cast<uint8_t>(bmp->BitmapType)];
-				ImGui::Text("type:%s, size:%d, resolution: %dx%d, offset:%dx%d", type,
-				            bmp->Resolution,
-				            bmp->Width, bmp->Height, bmp->XPosition, bmp->YPosition);
-			}
-
-			for (int same = 0, i = 0; i <= 2; i++)
-			{
-				auto bmp = group->GetBitmap(i);
-				if (!bmp)
-					continue;
-
-				gdrv::CreatePreview(*bmp);
-				if (bmp->Texture)
-				{
-					if (!same)
-						same = true;
-					else
-						ImGui::SameLine();
-
-					ImGui::Image(bmp->Texture, ImVec2(bmp->Width * scale, bmp->Height * scale),
-					             uv_min, uv_max, tint_col, border_col);
-				}
-			}
-
-			for (int same = 0, i = 0; i <= 2; i++)
-			{
-				auto zMap = group->GetZMap(i);
-				if (!zMap)
-					continue;
-
-				zdrv::CreatePreview(*zMap);
-				if (zMap->Texture)
-				{
-					if (!same)
-						same = true;
-					else
-						ImGui::SameLine();
-					ImGui::Image(zMap->Texture, ImVec2(zMap->Width * scale, zMap->Height * scale),
-					             uv_min, uv_max, tint_col, border_col);
-				}
-			}
-		}
-	}
-	ImGui::End();
-}
-
 void render::BlitVScreen()
 {
 	int pitch = 0;
-	ColorRgba* lockedPixels;
-	SDL_LockTexture
-	(
-		vScreenTex,
-		nullptr,
-		reinterpret_cast<void**>(&lockedPixels),
-		&pitch
-	);
+	SDL_LockSurface(vScreenTex);
+	ColorRgba* lockedPixels = (ColorRgba*)vScreenTex->pixels;
+	
 	assertm(static_cast<unsigned>(pitch) == vscreen->Width * sizeof(ColorRgba), "Padding on vScreen texture");
 
 	if (offset_x == 0 && offset_y == 0)
@@ -593,12 +496,11 @@ void render::BlitVScreen()
 		}
 	}
 
-
-	SDL_UnlockTexture(vScreenTex);
+	SDL_UnlockSurface(vScreenTex);
 }
 
 void render::PresentVScreen()
 {
 	BlitVScreen();
-	SDL_RenderCopy(winmain::Renderer, vScreenTex, nullptr, &DestinationRect);
+	SDL_BlitSurface(vScreenTex, NULL, winmain::ScreenSurface, NULL);
 }

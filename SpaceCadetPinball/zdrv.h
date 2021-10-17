@@ -10,7 +10,8 @@ struct zmap_header_type
 	int Stride;
 	unsigned Resolution;
 	uint16_t* ZPtr1;
-	SDL_Texture* Texture;
+	ColorRgba* RgbaBufPtr1;
+	SDL_Surface* Texture;
 private:
 	static int pad(int width);
 };

@@ -11,13 +11,15 @@ zmap_header_type::zmap_header_type(int width, int height, int stride)
 	Stride = stride >= 0 ? stride : pad(width);
 	Texture = nullptr;
 	ZPtr1 = new unsigned short[Stride * Height];
+	RgbaBufPtr1 = new ColorRgba[Width * Height];
 }
 
 zmap_header_type::~zmap_header_type()
 {
-	delete[] ZPtr1;
 	if (Texture)
-		SDL_DestroyTexture(Texture);
+		SDL_FreeSurface(Texture);
+	delete[] ZPtr1;
+	delete[] RgbaBufPtr1;
 }
 
 int zmap_header_type::pad(int width)
@@ -110,10 +112,8 @@ void zdrv::CreatePreview(zmap_header_type& zMap)
 	if (zMap.Texture)
 		return;
 
-	auto tmpBuff = new ColorRgba[zMap.Width * zMap.Height];
-
 	ColorRgba color{};
-	auto dst = tmpBuff;
+	auto dst = zMap.RgbaBufPtr1;
 	auto src = zMap.ZPtr1;
 	for (auto y = 0; y < zMap.Height; y++)
 	{
@@ -128,16 +128,20 @@ void zdrv::CreatePreview(zmap_header_type& zMap)
 		src += zMap.Stride - zMap.Width;
 	}
 
-	auto texture = SDL_CreateTexture
+	auto texture = SDL_CreateRGBSurfaceFrom
 	(
-		winmain::Renderer,
-		SDL_PIXELFORMAT_ARGB8888,
-		SDL_TEXTUREACCESS_STATIC,
-		zMap.Width, zMap.Height
+		zMap.RgbaBufPtr1,
+		zMap.Width,
+		zMap.Height,
+		32,
+		zMap.Width * 4,
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
 	);
-	SDL_UpdateTexture(texture, nullptr, tmpBuff, zMap.Width * 4);
+
 	zMap.Texture = texture;
-	delete[] tmpBuff;
 }
 
 void zdrv::FlipZMapHorizontally(const zmap_header_type& zMap)

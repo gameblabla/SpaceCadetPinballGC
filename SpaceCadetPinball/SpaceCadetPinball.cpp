@@ -17,7 +17,7 @@ int MainActual(LPCSTR lpCmdLine)
 	return returnCode;
 }
 
-int main(int argc, char* argv[])
+int SDL_main(int argc, char* argv[])
 {
 	std::string cmdLine;
 	for (int i = 1; i < argc; i++)

@@ -52,7 +52,7 @@ struct gdrv_bitmap8
 	int XPosition;
 	int YPosition;
 	unsigned Resolution;
-	SDL_Texture* Texture;
+	SDL_Surface* Texture;
 };
 
 

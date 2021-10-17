@@ -44,9 +44,7 @@ struct optionsStruct
 	ControlsStruct KeyDft;
 	bool Sounds;
 	bool Music;
-	bool FullScreen;
 	int Players;
-	int Resolution;
 	bool UniformScaling;
 	bool LinearFiltering;
 	int FramesPerSecond;
@@ -83,18 +81,12 @@ public:
 	static void set_float(LPCSTR lpValueName, float data);
 	static void toggle(Menu1 uIDCheckItem);
 	static void KeyDown(int key);
-	static void ShowControlDialog();
-	static void RenderControlDialog();
 private:
 	static std::map<std::string, std::string> settings;
 	static ControlsStruct RebindControls;
-	static bool ShowDialog;
 	static const ControlRef Controls[6];
 	static const ControlRef* ControlWaitingForKey;
 
-	static void MyUserData_ReadLine(ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line);
-	static void* MyUserData_ReadOpen(ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name);
-	static void MyUserData_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf);
 	static const std::string& GetSetting(const std::string& key, const std::string& value);
 	static void SetSetting(const std::string& key, const std::string& value);
 };

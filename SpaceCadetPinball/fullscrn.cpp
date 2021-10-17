@@ -20,71 +20,12 @@ const resolution_info fullscrn::resolution_array[3] =
 };
 float fullscrn::ScaleX = 1;
 float fullscrn::ScaleY = 1;
-int fullscrn::OffsetX = 0;
-int fullscrn::OffsetY = 0;
+Sint16 fullscrn::OffsetX = 0;
+Sint16 fullscrn::OffsetY = 0;
 
 void fullscrn::init()
 {
 	window_size_changed();
-}
-
-void fullscrn::shutdown()
-{
-	if (display_changed)
-		set_screen_mode(0);
-}
-
-int fullscrn::set_screen_mode(int isFullscreen)
-{
-	int result = isFullscreen;
-	if (isFullscreen == screen_mode)
-		return result;
-	screen_mode = isFullscreen;
-	if (isFullscreen)
-	{
-		enableFullscreen();
-		result = 1;
-	}
-	else
-	{
-		disableFullscreen();
-		result = 1;
-	}
-	return result;
-}
-
-int fullscrn::enableFullscreen()
-{
-	if (!display_changed)
-	{
-		SDL_SetWindowFullscreen(winmain::MainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		display_changed = 1;
-		if (display_changed)
-			return 1;
-	}
-	return 0;
-}
-
-int fullscrn::disableFullscreen()
-{
-	if (display_changed)
-	{
-		SDL_SetWindowFullscreen(winmain::MainWindow, 0);
-		display_changed = 0;
-	}
-
-	return 0;
-}
-
-void fullscrn::activate(int flag)
-{
-	if (screen_mode)
-	{
-		if (!flag)
-		{
-			set_screen_mode(0);
-		}
-	}
 }
 
 int fullscrn::GetResolution()
@@ -107,8 +48,9 @@ int fullscrn::GetMaxResolution()
 
 void fullscrn::window_size_changed()
 {
-	int width, height;
-	SDL_GetRendererOutputSize(winmain::Renderer, &width, &height);
+	int width = winmain::ScreenSurface->w;
+	int height = winmain::ScreenSurface->h;
+
 	auto res = &resolution_array[resolution];
 	ScaleX = static_cast<float>(width) / res->TableWidth;
 	ScaleY = static_cast<float>(height) / res->TableHeight;
@@ -124,6 +66,6 @@ void fullscrn::window_size_changed()
 	render::DestinationRect = SDL_Rect
 	{
 		OffsetX, OffsetY,
-		width - OffsetX * 2, height - OffsetY * 2
+		(Uint16)(width - OffsetX * 2), (Uint16)(height - OffsetY * 2)
 	};
 }

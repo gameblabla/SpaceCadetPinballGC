@@ -2,17 +2,12 @@
 #include "winmain.h"
 
 #include "control.h"
-#include "fullscrn.h"
 #include "midi.h"
 #include "pinball.h"
 #include "options.h"
 #include "pb.h"
 #include "render.h"
 #include "Sound.h"
-
-SDL_Window* winmain::MainWindow = nullptr;
-SDL_Renderer* winmain::Renderer = nullptr;
-ImGuiIO* winmain::ImIO = nullptr;
 
 int winmain::return_value = 0;
 int winmain::bQuit = 0;
@@ -30,8 +25,7 @@ bool winmain::restart = false;
 
 gdrv_bitmap8* winmain::gfr_display = nullptr;
 std::string winmain::DatFileName;
-bool winmain::ShowAboutDialog = false;
-bool winmain::ShowImGuiDemo = false;
+SDL_Surface* winmain::ScreenSurface;
 bool winmain::ShowSpriteViewer = false;
 bool winmain::LaunchBallEnabled = true;
 bool winmain::HighScoresEnabled = true;
@@ -50,15 +44,15 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	std::set_new_handler(memalloc_failure);
 
 	// SDL init
-	SDL_SetMainReady();
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not initialize SDL2", SDL_GetError(), nullptr);
-		return 1;
+		fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
+		SDL_Delay(5000);
+		exit(EXIT_FAILURE);
 	}
-	BasePath = SDL_GetBasePath();
+	BasePath = (char*)"sd:/apps/SpaceCadetPinball/Data/";
 
-	pinball::quickFlag = strstr(lpCmdLine, "-quick") != nullptr;
+	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
 	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
 
 	/*Check for full tilt .dat file and switch to it automatically*/
@@ -71,50 +65,13 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		pb::FullTiltMode = true;
 	}
 
-	// SDL window
-	SDL_Window* window = SDL_CreateWindow
-	(
-		pinball::get_rc_string(38, 0),
-		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		800, 556,
-		SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE
-	);
-	MainWindow = window;
-	if (!window)
+	ScreenSurface = SDL_SetVideoMode(640, 480, 16, SDL_DOUBLEBUF);
+	if (ScreenSurface == NULL)
 	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create window", SDL_GetError(), nullptr);
-		return 1;
+		fprintf(stderr, "Unable to set video: %s\n", SDL_GetError());
+		SDL_Delay(5000);
+		exit(EXIT_FAILURE);
 	}
-
-	SDL_Renderer* renderer = SDL_CreateRenderer
-	(
-		window,
-		-1,
-		SDL_RENDERER_ACCELERATED
-	);
-	Renderer = renderer;
-	if (!renderer)
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create renderer", SDL_GetError(), window);
-		return 1;
-	}
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-
-	// ImGui init
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiSDL::Initialize(renderer, 0, 0);
-	ImGui::StyleColorsDark();
-	ImGuiIO& io = ImGui::GetIO();
-	ImIO = &io;
-	// ImGui_ImplSDL2_Init is private, we are not actually using ImGui OpenGl backend
-	ImGui_ImplSDL2_InitForOpenGL(window, nullptr);
-
-	auto prefPath = SDL_GetPrefPath(nullptr, "SpaceCadetPinball");
-	auto iniPath = std::string(prefPath) + "imgui_pb.ini";
-	io.IniFilename = iniPath.c_str();
-	SDL_free(prefPath);
 
 	// PB init from message handler
 	{
@@ -127,29 +84,14 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		if (pb::init())
 		{
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not load game data",
-			                         "The .dat file is missing", window);
-			return 1;
+			fprintf(stderr, "Could not load game data: The .dat file is missing");
+			SDL_Delay(5000);
+			exit(EXIT_FAILURE);
 		}
-
-		fullscrn::init();
 	}
 
 	pb::reset_table();
 	pb::firsttime_setup();
-
-	if (strstr(lpCmdLine, "-fullscreen"))
-	{
-		Options.FullScreen = true;
-	}
-
-	SDL_ShowWindow(window);
-	fullscrn::set_screen_mode(Options.FullScreen);
-
-	if (strstr(lpCmdLine, "-demo"))
-		pb::toggle_demo();
-	else
-		pb::replay_level(0);
 
 	unsigned dtHistoryCounter = 300u, updateCounter = 0, frameCounter = 0;
 
@@ -168,7 +110,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 				auto elapsedSec = DurationMs(curTime - prevTime).count() * 0.001;
 				snprintf(buf, sizeof buf, "Updates/sec = %02.02f Frames/sec = %02.02f ",
 				         updateCounter / elapsedSec, frameCounter / elapsedSec);
-				SDL_SetWindowTitle(window, buf);
+
 				FpsDetails = buf;
 				frameCounter = updateCounter = 0;
 				prevTime = curTime;
@@ -205,25 +147,17 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			}
 		}
 
-		if (!ProcessWindowMessages() || bQuit)
-			break;
+		if (bQuit) break;
 
 		if (has_focus)
 		{
 			if (mouse_down)
 			{
-				int x, y, w, h;
+				int x, y;
 				SDL_GetMouseState(&x, &y);
-				SDL_GetWindowSize(window, &w, &h);
-				float dx = (last_mouse_x - x) / static_cast<float>(w);
-				float dy = (y - last_mouse_y) / static_cast<float>(h);
+				float dx = (last_mouse_x - x) / static_cast<float>(ScreenSurface->w);
+				float dy = (y - last_mouse_y) / static_cast<float>(ScreenSurface->h);
 				pb::ballset(dx, dy);
-				
-				SDL_WarpMouseInWindow(window, last_mouse_x, last_mouse_y);
-
-				// Mouse warp does not work over remote desktop or in some VMs
-				//last_mouse_x = x;
-				//last_mouse_y = y;
 			}
 			if (!single_step)
 			{
@@ -246,17 +180,10 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 			if (UpdateToFrameCounter >= UpdateToFrameRatio)
 			{
-				ImGui_ImplSDL2_NewFrame();
-				ImGui::NewFrame();
 				RenderUi();
 
-				SDL_RenderClear(renderer);
 				render::PresentVScreen();
 
-				ImGui::Render();
-				ImGuiSDL::Render(ImGui::GetDrawData());
-
-				SDL_RenderPresent(renderer);
 				frameCounter++;
 				UpdateToFrameCounter -= UpdateToFrameRatio;
 			}
@@ -296,11 +223,6 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	midi::music_shutdown();
 	pb::uninit();
 	Sound::Close();
-	ImGuiSDL::Deinitialize();
-	ImGui_ImplSDL2_Shutdown();
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
-	ImGui::DestroyContext();
 	SDL_Quit();
 
 	return return_value;
@@ -308,310 +230,25 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 void winmain::RenderUi()
 {
-	// A minimal window with a button to prevent menu lockout.
-	if (!Options.ShowMenu)
-	{
-		ImGui::SetNextWindowPos(ImVec2{});
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{10, 0});
-		if (ImGui::Begin("main", nullptr,
-		                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
-		                 ImGuiWindowFlags_AlwaysAutoResize |
-		                 ImGuiWindowFlags_NoMove))
-		{
-			ImGui::PushID(1);
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{});
-			if (ImGui::Button("Menu"))
-			{
-				options::toggle(Menu1::Show_Menu);
-			}
-			ImGui::PopStyleColor(1);
-			ImGui::PopID();
-		}
-		ImGui::End();
-		ImGui::PopStyleVar();
-		return;
-	}
-
-	// No demo window in release to save space
-#ifndef NDEBUG
-	if (ShowImGuiDemo)
-		ImGui::ShowDemoWindow(&ShowImGuiDemo);
-#endif
-
-	if (ImGui::BeginMainMenuBar())
-	{
-		if (ImGui::BeginMenu("Game"))
-		{
-			if (ImGui::MenuItem("New Game", "F2"))
-			{
-				new_game();
-			}
-			if (ImGui::MenuItem("Launch Ball", nullptr, false, LaunchBallEnabled))
-			{
-				end_pause();
-				pb::launch_ball();
-			}
-			if (ImGui::MenuItem("Pause/ Resume Game", "F3"))
-			{
-				pause();
-			}
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("High Scores...", nullptr, false, HighScoresEnabled))
-			{
-				if (!single_step)
-					pause();
-				pb::high_scores();
-			}
-			if (ImGui::MenuItem("Demo", nullptr, DemoActive))
-			{
-				end_pause();
-				pb::toggle_demo();
-			}
-			if (ImGui::MenuItem("Exit"))
-			{
-				SDL_Event event{SDL_QUIT};
-				SDL_PushEvent(&event);
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Options"))
-		{
-			if (ImGui::MenuItem("Show Menu", "F9", Options.ShowMenu))
-			{
-				options::toggle(Menu1::Show_Menu);
-			}
-			if (ImGui::MenuItem("Full Screen", "F4", Options.FullScreen))
-			{
-				options::toggle(Menu1::Full_Screen);
-			}
-			if (ImGui::BeginMenu("Select Players"))
-			{
-				if (ImGui::MenuItem("1 Player", nullptr, Options.Players == 1))
-				{
-					options::toggle(Menu1::OnePlayer);
-					new_game();
-				}
-				if (ImGui::MenuItem("2 Players", nullptr, Options.Players == 2))
-				{
-					options::toggle(Menu1::TwoPlayers);
-					new_game();
-				}
-				if (ImGui::MenuItem("3 Players", nullptr, Options.Players == 3))
-				{
-					options::toggle(Menu1::ThreePlayers);
-					new_game();
-				}
-				if (ImGui::MenuItem("4 Players", nullptr, Options.Players == 4))
-				{
-					options::toggle(Menu1::FourPlayers);
-					new_game();
-				}
-				ImGui::EndMenu();
-			}
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("Sound", "F5", Options.Sounds))
-			{
-				options::toggle(Menu1::Sounds);
-			}
-			if (ImGui::MenuItem("Music", "F6", Options.Music))
-			{
-				options::toggle(Menu1::Music);
-			}
-			ImGui::TextUnformatted("Sound Channels");
-			if (ImGui::SliderInt("##Sound Channels", &Options.SoundChannels, options::MinSoundChannels,
-			                     options::MaxSoundChannels, "%d", ImGuiSliderFlags_AlwaysClamp))
-			{
-				Options.SoundChannels = std::min(options::MaxSoundChannels,
-				                                 std::max(options::MinSoundChannels, Options.SoundChannels));
-				Sound::SetChannels(Options.SoundChannels);
-			}
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("Player Controls...", "F8"))
-			{
-				if (!single_step)
-					pause();
-				options::ShowControlDialog();
-			}
-			if (ImGui::BeginMenu("Table Resolution"))
-			{
-				char buffer[20]{};
-				auto maxResText = pinball::get_rc_string(fullscrn::GetMaxResolution() + 2030, 0);
-				if (ImGui::MenuItem(maxResText, nullptr, Options.Resolution == -1))
-				{
-					options::toggle(Menu1::MaximumResolution);
-				}
-				for (auto i = 0; i <= fullscrn::GetMaxResolution(); i++)
-				{
-					auto& res = fullscrn::resolution_array[i];
-					snprintf(buffer, sizeof buffer - 1, "%d x %d", res.ScreenWidth, res.ScreenHeight);
-					if (ImGui::MenuItem(buffer, nullptr, Options.Resolution == i))
-					{
-						options::toggle(static_cast<Menu1>(static_cast<int>(Menu1::R640x480) + i));
-					}
-				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Graphics"))
-			{
-				if (ImGui::MenuItem("Uniform Scaling", nullptr, Options.UniformScaling))
-				{
-					options::toggle(Menu1::WindowUniformScale);
-				}
-				if (ImGui::MenuItem("Linear Filtering", nullptr, Options.LinearFiltering))
-				{
-					options::toggle(Menu1::WindowLinearFilter);
-				}
-				ImGui::DragFloat("UI Scale", &ImIO->FontGlobalScale, 0.005f, 0.8f, 5,
-				                 "%.2f", ImGuiSliderFlags_AlwaysClamp);
-				ImGui::Separator();
-
-				char buffer[80]{};
-				auto changed = false;
-				if (ImGui::MenuItem("Set Default UPS/FPS"))
-				{
-					changed = true;
-					Options.UpdatesPerSecond = options::DefUps;
-					Options.FramesPerSecond = options::DefFps;
-				}
-				if (ImGui::SliderInt("UPS", &Options.UpdatesPerSecond, options::MinUps, options::MaxUps, "%d",
-				                     ImGuiSliderFlags_AlwaysClamp))
-				{
-					changed = true;
-					Options.FramesPerSecond = std::min(Options.UpdatesPerSecond, Options.FramesPerSecond);
-				}
-				if (ImGui::SliderInt("FPS", &Options.FramesPerSecond, options::MinFps, options::MaxFps, "%d",
-				                     ImGuiSliderFlags_AlwaysClamp))
-				{
-					changed = true;
-					Options.UpdatesPerSecond = std::max(Options.UpdatesPerSecond, Options.FramesPerSecond);
-				}
-				snprintf(buffer, sizeof buffer - 1, "Uncapped UPS (FPS ratio %02.02f)", UpdateToFrameRatio);
-				if (ImGui::MenuItem(buffer, nullptr, Options.UncappedUpdatesPerSecond))
-				{
-					Options.UncappedUpdatesPerSecond ^= true;
-				}
-
-				if (changed)
-				{
-					UpdateFrameRate();
-				}
-
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Help"))
-		{
-#ifndef NDEBUG
-			if (ImGui::MenuItem("ImGui Demo", nullptr, ShowImGuiDemo))
-			{
-				ShowImGuiDemo ^= true;
-			}
-#endif
-			if (ImGui::MenuItem("Sprite Viewer", nullptr, ShowSpriteViewer))
-			{
-				if (!ShowSpriteViewer && !single_step)
-					pause();
-				ShowSpriteViewer ^= true;
-			}
-			if (ImGui::BeginMenu("Cheats"))
-			{
-				if (ImGui::MenuItem("hidden test", nullptr, pb::cheat_mode))
-					pb::PushCheat("hidden test");
-				if (ImGui::MenuItem("1max"))
-					pb::PushCheat("1max");
-				if (ImGui::MenuItem("bmax", nullptr, control::table_unlimited_balls))
-					pb::PushCheat("bmax");
-				if (ImGui::MenuItem("gmax"))
-					pb::PushCheat("gmax");
-				if (ImGui::MenuItem("rmax"))
-					pb::PushCheat("rmax");
-				if (pb::FullTiltMode && ImGui::MenuItem("quote"))
-					pb::PushCheat("quote");
-
-				ImGui::EndMenu();
-			}
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("About Pinball"))
-			{
-				if (!single_step)
-					pause();
-				ShowAboutDialog = true;
-			}
-			ImGui::EndMenu();
-		}
-		if (DispFrameRate && !FpsDetails.empty())
-			if (ImGui::BeginMenu(FpsDetails.c_str()))
-				ImGui::EndMenu();
-		ImGui::EndMainMenuBar();
-	}
-
-	a_dialog();
-	high_score::RenderHighScoreDialog();
-	if (ShowSpriteViewer)
-		render::SpriteViewer(&ShowSpriteViewer);
-	options::RenderControlDialog();
+	
 }
 
 int winmain::event_handler(const SDL_Event* event)
 {
-	ImGui_ImplSDL2_ProcessEvent(event);
-
-	if (ImIO->WantCaptureMouse)
-	{
-		if (mouse_down)
-		{
-			mouse_down = 0;
-			SDL_SetWindowGrab(MainWindow, SDL_FALSE);
-		}
-		switch (event->type)
-		{
-		case SDL_MOUSEMOTION:
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-		case SDL_MOUSEWHEEL:
-			return 1;
-		default: ;
-		}
-	}
-	if (ImIO->WantCaptureKeyboard)
-	{
-		switch (event->type)
-		{
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			return 1;
-		default: ;
-		}
-	}
-
 	switch (event->type)
 	{
 	case SDL_QUIT:
 		end_pause();
 		bQuit = 1;
-		fullscrn::shutdown();
 		return_value = 0;
 		return 0;
 	case SDL_KEYUP:
 		pb::keyup(event->key.keysym.sym);
 		break;
 	case SDL_KEYDOWN:
-		if (!event->key.repeat)
-			pb::keydown(event->key.keysym.sym);
+		pb::keydown(event->key.keysym.sym);
 		switch (event->key.keysym.sym)
 		{
-		case SDLK_ESCAPE:
-			if (Options.FullScreen)
-				options::toggle(Menu1::Full_Screen);
-			SDL_MinimizeWindow(MainWindow);
-			break;
 		case SDLK_F2:
 			new_game();
 			break;
@@ -626,11 +263,6 @@ int winmain::event_handler(const SDL_Event* event)
 			break;
 		case SDLK_F6:
 			options::toggle(Menu1::Music);
-			break;
-		case SDLK_F8:
-			if (!single_step)
-				pause();
-			options::ShowControlDialog();
 			break;
 		case SDLK_F9:
 			options::toggle(Menu1::Show_Menu);
@@ -648,7 +280,6 @@ int winmain::event_handler(const SDL_Event* event)
 			DispGRhistory = 1;
 			break;
 		case SDLK_y:
-			SDL_SetWindowTitle(MainWindow, "Pinball");
 			DispFrameRate = DispFrameRate == 0;
 			break;
 		case SDLK_F1:
@@ -672,7 +303,6 @@ int winmain::event_handler(const SDL_Event* event)
 				mouse_down = 1;
 				last_mouse_x = event->button.x;
 				last_mouse_y = event->button.y;
-				SDL_SetWindowGrab(MainWindow, SDL_TRUE);
 			}
 			else
 				pb::keydown(Options.Key.LeftFlipper);
@@ -695,7 +325,6 @@ int winmain::event_handler(const SDL_Event* event)
 			if (mouse_down)
 			{
 				mouse_down = 0;
-				SDL_SetWindowGrab(MainWindow, SDL_FALSE);
 			}
 			if (!pb::cheat_mode)
 				pb::keyup(Options.Key.LeftFlipper);
@@ -711,65 +340,9 @@ int winmain::event_handler(const SDL_Event* event)
 			break;
 		}
 		break;
-	case SDL_WINDOWEVENT:
-		switch (event->window.event)
-		{
-		case SDL_WINDOWEVENT_FOCUS_GAINED:
-		case SDL_WINDOWEVENT_TAKE_FOCUS:
-		case SDL_WINDOWEVENT_SHOWN:
-			activated = 1;
-			Sound::Activate();
-			if (Options.Music && !single_step)
-				midi::play_pb_theme();
-			no_time_loss = 1;
-			has_focus = 1;
-			break;
-		case SDL_WINDOWEVENT_FOCUS_LOST:
-		case SDL_WINDOWEVENT_HIDDEN:
-			activated = 0;
-			fullscrn::activate(0);
-			Options.FullScreen = false;
-			Sound::Deactivate();
-			midi::music_stop();
-			has_focus = 0;
-			pb::loose_focus();
-			break;
-		case SDL_WINDOWEVENT_SIZE_CHANGED:
-		case SDL_WINDOWEVENT_RESIZED:
-			fullscrn::window_size_changed();
-			break;
-		default: ;
-		}
-		break;
 	default: ;
 	}
 
-	return 1;
-}
-
-int winmain::ProcessWindowMessages()
-{
-	static auto idleWait = 0;
-	SDL_Event event;
-	if (has_focus && !single_step)
-	{
-		idleWait = static_cast<int>(TargetFrameTime.count());
-		while (SDL_PollEvent(&event))
-		{
-			if (!event_handler(&event))
-				return 0;
-		}
-
-		return 1;
-	}
-
-	// Progressively wait longer when transitioning to idle
-	idleWait = std::min(idleWait + static_cast<int>(TargetFrameTime.count()), 500);
-	if (SDL_WaitEventTimeout(&event, idleWait))
-	{
-		idleWait = static_cast<int>(TargetFrameTime.count());
-		return event_handler(&event);
-	}
 	return 1;
 }
 
@@ -779,42 +352,9 @@ void winmain::memalloc_failure()
 	Sound::Close();
 	char* caption = pinball::get_rc_string(170, 0);
 	char* text = pinball::get_rc_string(179, 0);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, caption, text, MainWindow);
+	fprintf(stderr, "%s %s\n", caption, text);
 	std::exit(1);
-}
-
-void winmain::a_dialog()
-{
-	if (ShowAboutDialog == true)
-	{
-		ShowAboutDialog = false;
-		ImGui::OpenPopup("About");
-	}
-
-	bool unused_open = true;
-	if (ImGui::BeginPopupModal("About", &unused_open, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		ImGui::TextUnformatted("3D Pinball for Windows - Space Cadet");
-		ImGui::TextUnformatted("Original game by Cinematronics, Microsoft");
-		ImGui::Separator();
-
-		ImGui::TextUnformatted("Decompiled -> Ported to SDL");
-		ImGui::TextUnformatted("Version 2.0");
-		if (ImGui::SmallButton("Project home: https://github.com/k4zmu2a/SpaceCadetPinball"))
-		{
-#if SDL_VERSION_ATLEAST(2, 0, 14)
-			// Relatively new feature, skip with older SDL
-			SDL_OpenURL("https://github.com/k4zmu2a/SpaceCadetPinball");
-#endif
-		}
-		ImGui::Separator();
-
-		if (ImGui::Button("Ok"))
-		{
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
-	}
+	exit(EXIT_FAILURE);
 }
 
 void winmain::end_pause()

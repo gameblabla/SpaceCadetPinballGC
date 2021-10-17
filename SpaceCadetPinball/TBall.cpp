@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "TBall.h"
 
-
-#include "fullscrn.h"
 #include "loader.h"
 #include "maths.h"
 #include "pb.h"
@@ -35,7 +33,7 @@ TBall::TBall(TPinballTable* table) : TPinballComponent(table, -1, false)
 
 	/*Full tilt: ball is ballN, where N[0,2] resolution*/
 	if (pb::FullTiltMode)
-		ballGroupName[4] = '0' + fullscrn::GetResolution();
+		ballGroupName[4] = '0' + 0;
 	auto groupIndex = loader::query_handle(ballGroupName);
 
 	Offset = *loader::query_float_attribute(groupIndex, 0, 500);
