@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "wpad.h": "c",
+        "wiiuse.h": "c",
+        "gccore.h": "c",
+        "math.h": "c",
+        "string": "cpp"
+    }
+}

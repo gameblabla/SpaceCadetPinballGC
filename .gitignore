@@ -276,3 +276,8 @@ out/
 # Windows XP stuff
 DebugWinXp/
 ReleaseWinXp/
+
+# Wii
+build/
+*.elf
+*.dol
