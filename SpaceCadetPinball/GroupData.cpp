@@ -3,9 +3,11 @@
 #include "GroupData.h"
 
 #include "EmbeddedData.h"
+#include "fullscrn.h"
 #include "gdrv.h"
 #include "pb.h"
 #include "pinball.h"
+#include "utils.h"
 #include "zdrv.h"
 
 
@@ -111,7 +113,7 @@ void GroupData::SplitSplicedBitmap(const gdrv_bitmap8& srcBmp, gdrv_bitmap8& bmp
 	zdrv::fill(&zMap, zMap.Width, zMap.Height, 0, 0, 0xFFFF);
 	zMap.Resolution = srcBmp.Resolution;
 
-	auto tableWidth = 640;
+	auto tableWidth = fullscrn::resolution_array[srcBmp.Resolution].TableWidth;
 	auto src = reinterpret_cast<uint16_t*>(srcBmp.IndexedBmpPtr);
 	auto srcChar = reinterpret_cast<char**>(&src);
 	for (int dstInd = 0;;)
@@ -271,13 +273,13 @@ char* DatFile::field_labeled(LPCSTR lpString, FieldTypes fieldType)
 gdrv_bitmap8* DatFile::GetBitmap(int groupIndex)
 {
 	auto group = Groups[groupIndex];
-	return group->GetBitmap(0);
+	return group->GetBitmap(fullscrn::GetResolution());
 }
 
 zmap_header_type* DatFile::GetZMap(int groupIndex)
 {
 	auto group = Groups[groupIndex];
-	return group->GetZMap(0);
+	return group->GetZMap(fullscrn::GetResolution());
 }
 
 void DatFile::Finalize()
@@ -301,6 +303,10 @@ void DatFile::Finalize()
 		auto rcData = reinterpret_cast<MsgFont*>(new uint8_t[fileSize]);
 		fseek(fileHandle, 0, SEEK_SET);
 		fread(rcData, 1, fileSize, fileHandle);
+
+		rcData->GapWidth = utils::swap_i16(rcData->GapWidth);
+		rcData->Unknown1 = utils::swap_i16(rcData->Unknown1);
+		rcData->Height = utils::swap_i16(rcData->Height);
 		fclose(fileHandle);
 		AddMsgFont(rcData, "pbmsg_ft");
 		delete[] rcData;

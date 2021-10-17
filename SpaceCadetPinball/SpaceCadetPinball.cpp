@@ -7,14 +7,7 @@
 
 int MainActual(LPCSTR lpCmdLine)
 {
-	// Todo: get rid of restart to change resolution.
-	int returnCode;
-	do
-	{
-		returnCode = winmain::WinMain(lpCmdLine);
-	}
-	while (winmain::RestartRequested());
-	return returnCode;
+	return winmain::WinMain(lpCmdLine);
 }
 
 int SDL_main(int argc, char* argv[])

@@ -21,8 +21,6 @@ int winmain::last_mouse_y;
 int winmain::mouse_down;
 int winmain::no_time_loss;
 
-bool winmain::restart = false;
-
 gdrv_bitmap8* winmain::gfr_display = nullptr;
 std::string winmain::DatFileName;
 SDL_Surface* winmain::ScreenSurface;
@@ -38,7 +36,6 @@ optionsStruct& winmain::Options = options::Options;
 
 int winmain::WinMain(LPCSTR lpCmdLine)
 {
-	restart = false;
 	bQuit = false;
 
 	std::set_new_handler(memalloc_failure);
@@ -376,13 +373,6 @@ void winmain::pause()
 {
 	pb::pause_continue();
 	no_time_loss = 1;
-}
-
-void winmain::Restart()
-{
-	restart = true;
-	SDL_Event event{SDL_QUIT};
-	SDL_PushEvent(&event);
 }
 
 void winmain::UpdateFrameRate()

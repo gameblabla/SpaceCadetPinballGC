@@ -36,15 +36,12 @@ public:
 	static void end_pause();
 	static void new_game();
 	static void pause();
-	static void Restart();
-	static bool RestartRequested() { return restart; }
 	static void UpdateFrameRate();
 private:
 	static int return_value, bQuit, DispFrameRate, DispGRhistory, activated;
 	static int has_focus, mouse_down, last_mouse_x, last_mouse_y, no_time_loss;
 	static gdrv_bitmap8* gfr_display;
 	static std::string FpsDetails;
-	static bool restart;
 	static bool ShowSpriteViewer;
 	static double UpdateToFrameRatio;
 	static DurationMs TargetFrameTime;

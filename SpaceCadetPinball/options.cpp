@@ -137,7 +137,6 @@ void options::toggle(Menu1 uIDCheckItem)
 		break;
 	case Menu1::WindowLinearFilter:
 		Options.LinearFiltering ^= true;
-		winmain::Restart();
 		break;
 	default:
 		break;

@@ -3,6 +3,7 @@
 
 #include "gdrv.h"
 #include "GroupData.h"
+#include "utils.h"
 #include "zdrv.h"
 
 short partman::_field_size[] =
@@ -21,6 +22,12 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 		return nullptr;
 
 	fread(&header, 1, sizeof header, fileHandle);
+
+	header.FileSize = utils::swap_i32(header.FileSize);
+	header.NumberOfGroups = utils::swap_u16(header.NumberOfGroups);
+	header.SizeOfBody = utils::swap_i32(header.SizeOfBody);
+	header.Unknown = utils::swap_u16(header.Unknown);
+
 	if (strcmp("PARTOUT(4.0)RESOURCE", header.FileSignature) != 0)
 	{
 		fclose(fileHandle);
@@ -65,12 +72,18 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 			entryData->EntryType = entryType;
 
 			int fixedSize = _field_size[static_cast<int>(entryType)];
-			size_t fieldSize = fixedSize >= 0 ? fixedSize : LRead<uint32_t>(fileHandle);
+			size_t fieldSize = fixedSize >= 0 ? fixedSize : utils::swap_u32(LRead<uint32_t>(fileHandle));
 			entryData->FieldSize = static_cast<int>(fieldSize);
 
 			if (entryType == FieldTypes::Bitmap8bit)
 			{
 				fread(&bmpHeader, 1, sizeof(dat8BitBmpHeader), fileHandle);
+				
+				bmpHeader.Width = utils::swap_i16(bmpHeader.Width);
+				bmpHeader.Height = utils::swap_i16(bmpHeader.Height);
+				bmpHeader.XPosition = utils::swap_i16(bmpHeader.XPosition);
+				bmpHeader.YPosition = utils::swap_i16(bmpHeader.YPosition);
+				bmpHeader.Size = utils::swap_i32(bmpHeader.Size);
 				assertm(bmpHeader.Size + sizeof(dat8BitBmpHeader) == fieldSize, "partman: Wrong bitmap field size");
 				assertm(bmpHeader.Resolution <= 2, "partman: bitmap resolution out of bounds");
 
@@ -90,6 +103,13 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 				}
 
 				fread(&zMapHeader, 1, sizeof(dat16BitBmpHeader), fileHandle);
+				zMapHeader.Width = utils::swap_i16(zMapHeader.Width);
+				zMapHeader.Height = utils::swap_i16(zMapHeader.Height);
+				zMapHeader.Stride = utils::swap_i16(zMapHeader.Stride);
+				zMapHeader.Unknown0 = utils::swap_i32(zMapHeader.Unknown0);
+				zMapHeader.Unknown1_0 = utils::swap_i16(zMapHeader.Unknown1_0);
+				zMapHeader.Unknown1_1 = utils::swap_i16(zMapHeader.Unknown1_1);
+
 				auto length = fieldSize - sizeof(dat16BitBmpHeader);
 
 				auto zMap = new zmap_header_type(zMapHeader.Width, zMapHeader.Height, zMapHeader.Stride);
