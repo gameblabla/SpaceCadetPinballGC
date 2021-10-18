@@ -8,6 +8,8 @@
 #define PAD_BUTTON_2 3
 #define PAD_BUTTON_MINUS 4
 #define PAD_BUTTON_PLUS 5
+#define PAD_BUTTON_Z 7
+#define PAD_BUTTON_C 8
 
 // Custom DPAD defines, // as SDL values conflict
 // between buttons and DPAD (handled as "hats")

@@ -25,9 +25,9 @@ const ControlRef options::Controls[6]
 
 void options::init()
 {
-	Options.KeyDft.LeftFlipper = PAD_BUTTON_A;
+	Options.KeyDft.LeftFlipper = PAD_BUTTON_Z;
 	Options.KeyDft.RightFlipper = PAD_BUTTON_B;
-	Options.KeyDft.Plunger = PAD_BUTTON_1;
+	Options.KeyDft.Plunger = PAD_BUTTON_A;
 	Options.KeyDft.LeftTableBump = PAD_DPAD_RIGHT;
 	Options.KeyDft.RightTableBump = PAD_DPAD_LEFT;
 	Options.KeyDft.BottomTableBump = PAD_DPAD_UP;

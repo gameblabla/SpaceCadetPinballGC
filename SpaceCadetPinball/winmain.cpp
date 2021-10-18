@@ -205,24 +205,24 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		// 	pb::ballset(dx, dy);
 		// }
 
-		// if (!single_step)
-		// {
-		// auto dt = static_cast<float>(frameDuration.count());
-		// auto dtWhole = static_cast<int>(std::round(dt));
-		pb::frame(1000.0f / 60.0f);
-		// if (gfr_display)
-		// {
-		// 	auto deltaTPal = dtWhole + 10;
-		// 	auto fillChar = static_cast<uint8_t>(deltaTPal);
-		// 	if (deltaTPal > 236)
-		// 	{
-		// 		fillChar = 1;
-		// 	}
-		// 	gdrv::fill_bitmap(gfr_display, 1, 10, 300 - dtHistoryCounter, 0, fillChar);
-		// 	--dtHistoryCounter;
-		// }
-		// updateCounter++;
-		// }
+		if (!single_step)
+		{
+			// auto dt = static_cast<float>(frameDuration.count());
+			// auto dtWhole = static_cast<int>(std::round(dt));
+			pb::frame(1000.0f / 60.0f);
+			// if (gfr_display)
+			// {
+			// 	auto deltaTPal = dtWhole + 10;
+			// 	auto fillChar = static_cast<uint8_t>(deltaTPal);
+			// 	if (deltaTPal > 236)
+			// 	{
+			// 		fillChar = 1;
+			// 	}
+			// 	gdrv::fill_bitmap(gfr_display, 1, 10, 300 - dtHistoryCounter, 0, fillChar);
+			// 	--dtHistoryCounter;
+			// }
+			// updateCounter++;
+		}
 
 		//printf("Current Frame: %u\n", frameCounter);
 		// if (UpdateToFrameCounter >= UpdateToFrameRatio)
@@ -297,10 +297,10 @@ int winmain::event_handler(const SDL_Event *event)
 		pb::keydown(event->jbutton.button);
 		switch (event->jbutton.button)
 		{
-		case PAD_BUTTON_MINUS: // -
+		case PAD_BUTTON_MINUS:
 			new_game();
 			break;
-		case PAD_BUTTON_PLUS: // +
+		case PAD_BUTTON_PLUS:
 			pause();
 			break;
 		// case SDLK_F4:
