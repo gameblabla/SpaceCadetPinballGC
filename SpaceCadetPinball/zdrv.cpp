@@ -135,10 +135,17 @@ void zdrv::CreatePreview(zmap_header_type& zMap)
 		zMap.Height,
 		32,
 		zMap.Width * 4,
+#if BIG_ENDIAN
 		0xff000000,
 		0x00ff0000,
 		0x0000ff00,
 		0x000000ff
+#else
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
+#endif
 	);
 
 	zMap.Texture = texture;
