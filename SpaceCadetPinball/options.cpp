@@ -5,8 +5,6 @@
 #include "Sound.h"
 #include "winmain.h"
 
-#include "ogc/pad.h"
-
 constexpr int options::MaxUps, options::MaxFps, options::MinUps, options::MinFps, options::DefUps, options::DefFps;
 constexpr int options::MaxSoundChannels, options::MinSoundChannels, options::DefSoundChannels;
 
@@ -27,16 +25,16 @@ const ControlRef options::Controls[6]
 
 void options::init()
 {
-	Options.KeyDft.LeftFlipper = PAD_TRIGGER_L;
-	Options.KeyDft.RightFlipper = PAD_TRIGGER_R;
-	Options.KeyDft.Plunger = PAD_BUTTON_A;
-	Options.KeyDft.LeftTableBump = PAD_BUTTON_LEFT;
-	Options.KeyDft.RightTableBump = PAD_BUTTON_RIGHT;
-	Options.KeyDft.BottomTableBump = PAD_BUTTON_UP;
+	Options.KeyDft.LeftFlipper = PAD_BUTTON_A;
+	Options.KeyDft.RightFlipper = PAD_BUTTON_B;
+	Options.KeyDft.Plunger = PAD_BUTTON_1;
+	Options.KeyDft.LeftTableBump = PAD_DPAD_RIGHT;
+	Options.KeyDft.RightTableBump = PAD_DPAD_LEFT;
+	Options.KeyDft.BottomTableBump = PAD_DPAD_UP;
 	Options.Key = Options.KeyDft;
 
 	Options.Sounds = get_int("Sounds", true);
-	Options.Music = get_int("Music", false);
+	Options.Music = get_int("Music", true);
 	Options.Players = get_int("Players", 1);
 	Options.Key.LeftFlipper = get_int("Left Flipper key", Options.Key.LeftFlipper);
 	Options.Key.RightFlipper = get_int("Right Flipper key", Options.Key.RightFlipper);

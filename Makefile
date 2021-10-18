@@ -35,12 +35,12 @@ INCLUDES	:=
 CFLAGS		=	-g -O2 -Wall $(MACHDEP) $(INCLUDE) -Dmain=SDL_main
 CXXFLAGS	=	$(CFLAGS)
 
-LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lSDL_gfx -lSDL_mixer -lSDL_image -lSDL -lSDLmain -lvorbisfile -lvorbis -logg -lmodplug -lmad -laesnd -lfat -lwiikeyboard -lwiiuse -lbte -logc -lm
+LIBS	:=	-lSDL_mixer -lSDL -lSDLmain -lvorbisfile -lvorbis -logg -lmodplug -lmad -laesnd -lfat -lwiikeyboard -lwiiuse -lbte -logc -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

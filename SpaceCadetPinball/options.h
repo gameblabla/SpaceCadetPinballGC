@@ -30,12 +30,12 @@ enum class Menu1:int
 
 struct ControlsStruct
 {
-	int LeftFlipper;
-	int RightFlipper;
-	int Plunger;
-	int LeftTableBump;
-	int RightTableBump;
-	int BottomTableBump;
+	uint16_t LeftFlipper;
+	uint16_t RightFlipper;
+	uint16_t Plunger;
+	uint16_t LeftTableBump;
+	uint16_t RightTableBump;
+	uint16_t BottomTableBump;
 };
 
 struct optionsStruct
@@ -57,7 +57,7 @@ struct optionsStruct
 struct ControlRef
 {
 	const char* Name;
-	int& Option;
+	uint16_t& Option;
 };
 
 

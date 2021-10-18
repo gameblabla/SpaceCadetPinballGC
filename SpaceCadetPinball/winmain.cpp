@@ -22,7 +22,8 @@ int winmain::no_time_loss;
 
 gdrv_bitmap8* winmain::gfr_display = nullptr;
 std::string winmain::DatFileName;
-SDL_Surface* winmain::ScreenSurface;
+SDL_Surface* winmain::ScreenSurface = nullptr;
+SDL_Joystick* winmain::Joystick = nullptr;
 bool winmain::ShowSpriteViewer = false;
 bool winmain::LaunchBallEnabled = true;
 bool winmain::HighScoresEnabled = true;
@@ -40,12 +41,16 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	std::set_new_handler(memalloc_failure);
 
 	// SDL init
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 	{
 		fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
 		SDL_Delay(5000);
 		exit(EXIT_FAILURE);
 	}
+
+	atexit(SDL_Quit);
+	SDL_ShowCursor(SDL_DISABLE);
+
 	BasePath = (char*)"sd:/apps/SpaceCadetPinball/Data/";
 
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
@@ -91,10 +96,18 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	unsigned dtHistoryCounter = 300u, updateCounter = 0, frameCounter = 0;
 
+	pb::replay_level(0);
+
 	auto frameStart = Clock::now();
 	double UpdateToFrameCounter = 0;
 	DurationMs sleepRemainder(0), frameDuration(TargetFrameTime);
 	auto prevTime = frameStart;
+
+	Joystick = SDL_JoystickOpen(0);
+	int hatCount = SDL_JoystickNumHats(Joystick);
+	int previousHatState[hatCount];
+	for (int h = 0; h < hatCount; h++)
+		previousHatState[h] = SDL_HAT_CENTERED;
 
 	while (true)
 	{
@@ -144,8 +157,44 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		// 	}
 		// }
 
-		if (bQuit) break;
+		if (bQuit)
+			break;
 
+		SDL_JoystickUpdate();
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			event_handler(&event);
+		}
+
+		// SDL_Wii way of handling the DPAD
+
+		for (int h = 0; h < hatCount; h++)
+		{
+			int hatState = SDL_JoystickGetHat(Joystick, h);
+			if (previousHatState[h] == hatState)
+				continue;
+			previousHatState[h] = hatState;
+
+			switch (hatState)
+			{
+			case SDL_HAT_UP:
+				pb::keydown(PAD_DPAD_UP);
+				break;
+			case SDL_HAT_RIGHT:
+				pb::keydown(PAD_DPAD_RIGHT);
+				break;
+			case SDL_HAT_LEFT:
+				pb::keydown(PAD_DPAD_LEFT);
+				break;
+			default:
+				pb::keyup(PAD_DPAD_LEFT);
+				pb::keyup(PAD_DPAD_RIGHT);
+				pb::keyup(PAD_DPAD_UP);
+				break;
+			}
+		}
 
 		// if (mouse_down)
 		// {
@@ -158,39 +207,39 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		// if (!single_step)
 		// {
-		// 	auto dt = static_cast<float>(frameDuration.count());
-		// 	auto dtWhole = static_cast<int>(std::round(dt));
-		// 	pb::frame(dt);
-		// 	if (gfr_display)
+		// auto dt = static_cast<float>(frameDuration.count());
+		// auto dtWhole = static_cast<int>(std::round(dt));
+		pb::frame(1000.0f / 60.0f);
+		// if (gfr_display)
+		// {
+		// 	auto deltaTPal = dtWhole + 10;
+		// 	auto fillChar = static_cast<uint8_t>(deltaTPal);
+		// 	if (deltaTPal > 236)
 		// 	{
-		// 		auto deltaTPal = dtWhole + 10;
-		// 		auto fillChar = static_cast<uint8_t>(deltaTPal);
-		// 		if (deltaTPal > 236)
-		// 		{
-		// 			fillChar = 1;
-		// 		}
-		// 		gdrv::fill_bitmap(gfr_display, 1, 10, 300 - dtHistoryCounter, 0, fillChar);
-		// 		--dtHistoryCounter;
+		// 		fillChar = 1;
 		// 	}
-		// 	updateCounter++;
+		// 	gdrv::fill_bitmap(gfr_display, 1, 10, 300 - dtHistoryCounter, 0, fillChar);
+		// 	--dtHistoryCounter;
 		// }
-printf("Current Frame: %u\n", frameCounter);
+		// updateCounter++;
+		// }
+
+		//printf("Current Frame: %u\n", frameCounter);
 		// if (UpdateToFrameCounter >= UpdateToFrameRatio)
 		// {
-			RenderUi();
 
-			render::PresentVScreen();
+		render::PresentVScreen();
 
-			frameCounter++;
-			// UpdateToFrameCounter -= UpdateToFrameRatio;
+		frameCounter++;
+		// UpdateToFrameCounter -= UpdateToFrameRatio;
 		// }
 
-		auto sdlError = SDL_GetError();
-		if (sdlError[0])
-		{
-			SDL_ClearError();
-			printf("SDL Error: %s\n", sdlError);
-		}
+		// auto sdlError = SDL_GetError();
+		// if (sdlError[0])
+		// {
+		// 	SDL_ClearError();
+		// 	printf("SDL Error: %s\n", sdlError);
+		// }
 
 		// auto updateEnd = Clock::now();
 		// auto targetTimeDelta = TargetFrameTime - DurationMs(updateEnd - frameStart) - sleepRemainder;
@@ -208,13 +257,19 @@ printf("Current Frame: %u\n", frameCounter);
 		// 	sleepRemainder = DurationMs(0);
 		// }
 
-		// Limit duration to 2 * target time
+		// // Limit duration to 2 * target time
 		// frameDuration = std::min<DurationMs>(DurationMs(frameEnd - frameStart), 2 * TargetFrameTime);
 		// frameStart = frameEnd;
 		// UpdateToFrameCounter++;
 
-		SDL_Flip(ScreenSurface);
+		if (SDL_Flip(ScreenSurface) < 0)
+		{
+			fprintf(stderr, "Error in SDL_Flip: %s\n", SDL_GetError());
+			exit(EXIT_FAILURE);
+		}
 	}
+
+	SDL_JoystickClose(0);
 
 	delete gfr_display;
 	options::uninit();
@@ -226,12 +281,7 @@ printf("Current Frame: %u\n", frameCounter);
 	return return_value;
 }
 
-void winmain::RenderUi()
-{
-	
-}
-
-int winmain::event_handler(const SDL_Event* event)
+int winmain::event_handler(const SDL_Event *event)
 {
 	switch (event->type)
 	{
@@ -240,57 +290,57 @@ int winmain::event_handler(const SDL_Event* event)
 		bQuit = 1;
 		return_value = 0;
 		return 0;
-	case SDL_KEYUP:
-		pb::keyup(event->key.keysym.sym);
+	case SDL_JOYBUTTONUP:
+		pb::keyup(event->jbutton.button);
 		break;
-	case SDL_KEYDOWN:
-		pb::keydown(event->key.keysym.sym);
-		switch (event->key.keysym.sym)
+	case SDL_JOYBUTTONDOWN:
+		pb::keydown(event->jbutton.button);
+		switch (event->jbutton.button)
 		{
-		case SDLK_F2:
+		case PAD_BUTTON_MINUS: // -
 			new_game();
 			break;
-		case SDLK_F3:
+		case PAD_BUTTON_PLUS: // +
 			pause();
 			break;
-		case SDLK_F4:
-			options::toggle(Menu1::Full_Screen);
-			break;
-		case SDLK_F5:
-			options::toggle(Menu1::Sounds);
-			break;
-		case SDLK_F6:
-			options::toggle(Menu1::Music);
-			break;
-		case SDLK_F9:
-			options::toggle(Menu1::Show_Menu);
-			break;
+		// case SDLK_F4:
+		// 	options::toggle(Menu1::Full_Screen);
+		// 	break;
+		// case SDLK_F5:
+		// 	options::toggle(Menu1::Sounds);
+		// 	break;
+		// case SDLK_F6:
+		// 	options::toggle(Menu1::Music);
+		// 	break;
+		// case SDLK_F9:
+		// 	options::toggle(Menu1::Show_Menu);
+		// 	break;
 		default:
 			break;
 		}
 
-		if (!pb::cheat_mode)
-			break;
+		// if (!pb::cheat_mode)
+		// 	break;
 
-		switch (event->key.keysym.sym)
-		{
-		case SDLK_g:
-			DispGRhistory = 1;
-			break;
-		case SDLK_y:
-			DispFrameRate = DispFrameRate == 0;
-			break;
-		case SDLK_F1:
-			pb::frame(10);
-			break;
-		case SDLK_F10:
-			single_step = single_step == 0;
-			if (single_step == 0)
-				no_time_loss = 1;
-			break;
-		default:
-			break;
-		}
+		// switch (event->key.keysym.sym)
+		// {
+		// case SDLK_g:
+		// 	DispGRhistory = 1;
+		// 	break;
+		// case SDLK_y:
+		// 	DispFrameRate = DispFrameRate == 0;
+		// 	break;
+		// case SDLK_F1:
+		// 	pb::frame(10);
+		// 	break;
+		// case SDLK_F10:
+		// 	single_step = single_step == 0;
+		// 	if (single_step == 0)
+		// 		no_time_loss = 1;
+		// 	break;
+		// default:
+		// 	break;
+		// }
 		break;
 	case SDL_MOUSEBUTTONDOWN:
 		switch (event->button.button)
@@ -338,7 +388,7 @@ int winmain::event_handler(const SDL_Event* event)
 			break;
 		}
 		break;
-	default: ;
+	default:;
 	}
 
 	return 1;

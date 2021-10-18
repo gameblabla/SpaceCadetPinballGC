@@ -1,6 +1,21 @@
 #pragma once
 #include "gdrv.h"
 
+// SDL Buttons
+#define PAD_BUTTON_A 0
+#define PAD_BUTTON_B 1
+#define PAD_BUTTON_1 2
+#define PAD_BUTTON_2 3
+#define PAD_BUTTON_MINUS 4
+#define PAD_BUTTON_PLUS 5
+
+// Custom DPAD defines, // as SDL values conflict
+// between buttons and DPAD (handled as "hats")
+#define PAD_DPAD_LEFT 256
+#define PAD_DPAD_RIGHT 257
+#define PAD_DPAD_UP 258
+#define PAD_DPAD_DOWN 259
+
 struct SdlTickClock
 {
 	using duration = std::chrono::milliseconds;
@@ -25,6 +40,7 @@ public:
 	static std::string DatFileName;
 	static int single_step;
 	static SDL_Surface* ScreenSurface;
+	static SDL_Joystick* Joystick;
 	static bool LaunchBallEnabled;
 	static bool HighScoresEnabled;
 	static bool DemoActive;
@@ -46,6 +62,4 @@ private:
 	static double UpdateToFrameRatio;
 	static DurationMs TargetFrameTime;
 	static struct optionsStruct& Options;
-
-	static void RenderUi();
 };

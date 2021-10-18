@@ -505,5 +505,10 @@ void render::BlitVScreen()
 void render::PresentVScreen()
 {
 	BlitVScreen();
-	SDL_BlitSurface(vScreenTex, NULL, winmain::ScreenSurface, NULL);
+
+	if (SDL_BlitSurface(vScreenTex, NULL, winmain::ScreenSurface, NULL) < 0)
+	{
+		fprintf(stderr, "Error in SDL_BlitSurface: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
 }

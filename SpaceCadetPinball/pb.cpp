@@ -360,7 +360,7 @@ void pb::loose_focus()
 		MainTable->Message(1010, time_now);
 }
 
-void pb::keyup(int key)
+void pb::keyup(uint16_t key)
 {
 	if (game_mode == 1 && !winmain::single_step && !demo_mode)
 	{
@@ -391,9 +391,9 @@ void pb::keyup(int key)
 	}
 }
 
-void pb::keydown(int key)
+void pb::keydown(uint16_t key)
 {
-	options::KeyDown(key);
+	//options::KeyDown(key);
 	if (winmain::single_step || demo_mode)
 		return;
 	if (game_mode != 1)

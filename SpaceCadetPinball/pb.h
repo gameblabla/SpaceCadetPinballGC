@@ -30,8 +30,8 @@ public:
 	static void window_size(int* width, int* height);
 	static void pause_continue();
 	static void loose_focus();
-	static void keyup(int key);
-	static void keydown(int key);
+	static void keyup(uint16_t key);
+	static void keydown(uint16_t key);
 	static int mode_countdown(int time);
 	static void launch_ball();
 	static void end_game();

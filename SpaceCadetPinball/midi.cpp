@@ -152,6 +152,8 @@ bool midi::play_track(Mix_Music* midi)
 		return false;
 	}
 
+	Mix_VolumeMusic(96);
+
 	active_track = midi;
 	return true;
 }
