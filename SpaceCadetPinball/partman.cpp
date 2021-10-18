@@ -135,6 +135,42 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 					break;
 				}
 				fread(entryBuffer, 1, fieldSize, fileHandle);
+
+				if (entryType == FieldTypes::ShortValue)
+				{
+					char c1 = entryBuffer[0];
+					char c2 = entryBuffer[1];
+					entryBuffer[0] = c2;
+					entryBuffer[1] = c1;
+				}
+				else if (entryType == FieldTypes::Unknown2)
+				{
+					// TODO: This is 2 bytes according to partman::_field_size. Should be endian swapped
+				}
+				else if (entryType == FieldTypes::ShortArray)
+				{
+					for (size_t i = 0; i < fieldSize; i += 2)
+					{
+						char c1 = entryBuffer[i + 0];
+						char c2 = entryBuffer[i + 1];
+						entryBuffer[i + 0] = c2;
+						entryBuffer[i + 1] = c1;
+					}
+				}
+				else if (entryType == FieldTypes::FloatArray)
+				{
+					for (size_t i = 0; i < fieldSize; i += 4)
+					{
+						char c1 = entryBuffer[i + 0];
+						char c2 = entryBuffer[i + 1];
+						char c3 = entryBuffer[i + 2];
+						char c4 = entryBuffer[i + 3];
+						entryBuffer[i + 0] = c4;
+						entryBuffer[i + 1] = c3;
+						entryBuffer[i + 2] = c2;
+						entryBuffer[i + 3] = c1;
+					}
+				}
 			}
 
 			groupData->AddEntry(entryData);
