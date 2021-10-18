@@ -136,6 +136,7 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 				}
 				fread(entryBuffer, 1, fieldSize, fileHandle);
 
+#ifdef BIG_ENDIAN
 				if (entryType == FieldTypes::ShortValue)
 				{
 					char c1 = entryBuffer[0];
@@ -187,6 +188,7 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 						entryBuffer[i + 3] = c1;
 					}
 				}
+#endif
 			}
 
 			groupData->AddEntry(entryData);

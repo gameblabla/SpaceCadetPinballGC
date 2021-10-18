@@ -8,13 +8,19 @@ enum class BitmapTypes : uint8_t
 	Spliced = 3,
 };
 
-
 struct Rgba
 {
+#ifdef BIG_ENDIAN
+	uint8_t Red;
+	uint8_t Green;
+	uint8_t Blue;
+	uint8_t Alpha;
+#else
 	uint8_t Blue;
 	uint8_t Green;
 	uint8_t Red;
 	uint8_t Alpha;
+#endif
 };
 
 union ColorRgba
