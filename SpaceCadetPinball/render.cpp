@@ -435,12 +435,15 @@ void render::build_occlude_list()
 
 void render::BlitVScreen()
 {
-	int pitch = 0;
-	SDL_LockSurface(vScreenTex);
-	ColorRgba* lockedPixels = (ColorRgba*)vScreenTex->pixels;
-	
-	assertm(static_cast<unsigned>(pitch) == vscreen->Width * sizeof(ColorRgba), "Padding on vScreen texture");
+	if (SDL_LockSurface(vScreenTex) < 0)
+	{
+		fprintf(stderr, "Error in SDL_LockSurface: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
 
+	ColorRgba *lockedPixels = (ColorRgba *)vScreenTex->pixels;
+
+	assertm(static_cast<unsigned>(vScreenTex->pitch) == vscreen->Width * sizeof(ColorRgba), "Padding on vScreen texture");
 	if (offset_x == 0 && offset_y == 0)
 	{
 		// No offset - direct copy

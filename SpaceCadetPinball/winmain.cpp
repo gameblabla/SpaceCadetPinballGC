@@ -15,7 +15,6 @@ int winmain::activated;
 int winmain::DispFrameRate = 0;
 int winmain::DispGRhistory = 0;
 int winmain::single_step = 0;
-int winmain::has_focus = 1;
 int winmain::last_mouse_x;
 int winmain::last_mouse_y;
 int winmain::mouse_down;
@@ -96,123 +95,125 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	double UpdateToFrameCounter = 0;
 	DurationMs sleepRemainder(0), frameDuration(TargetFrameTime);
 	auto prevTime = frameStart;
+
 	while (true)
 	{
-		if (DispFrameRate)
-		{
-			auto curTime = Clock::now();
-			if (curTime - prevTime > DurationMs(1000))
-			{
-				char buf[60];
-				auto elapsedSec = DurationMs(curTime - prevTime).count() * 0.001;
-				snprintf(buf, sizeof buf, "Updates/sec = %02.02f Frames/sec = %02.02f ",
-				         updateCounter / elapsedSec, frameCounter / elapsedSec);
+		// if (DispFrameRate)
+		// {
+		// 	auto curTime = Clock::now();
+		// 	if (curTime - prevTime > DurationMs(1000))
+		// 	{
+		// 		char buf[60];
+		// 		auto elapsedSec = DurationMs(curTime - prevTime).count() * 0.001;
+		// 		snprintf(buf, sizeof buf, "Updates/sec = %02.02f Frames/sec = %02.02f ",
+		// 		         updateCounter / elapsedSec, frameCounter / elapsedSec);
 
-				FpsDetails = buf;
-				frameCounter = updateCounter = 0;
-				prevTime = curTime;
-			}
-		}
+		// 		FpsDetails = buf;
+		// 		frameCounter = updateCounter = 0;
+		// 		prevTime = curTime;
+		// 	}
+		// }
 
-		if (DispGRhistory)
-		{
-			if (!gfr_display)
-			{
-				auto plt = static_cast<ColorRgba*>(malloc(1024u));
-				auto pltPtr = &plt[10];
-				for (int i1 = 0, i2 = 0; i1 < 256 - 10; ++i1, i2 += 8)
-				{
-					unsigned char blue = i2, redGreen = i2;
-					if (i2 > 255)
-					{
-						blue = 255;
-						redGreen = i1;
-					}
+		// if (DispGRhistory)
+		// {
+		// 	if (!gfr_display)
+		// 	{
+		// 		auto plt = static_cast<ColorRgba*>(malloc(1024u));
+		// 		auto pltPtr = &plt[10];
+		// 		for (int i1 = 0, i2 = 0; i1 < 256 - 10; ++i1, i2 += 8)
+		// 		{
+		// 			unsigned char blue = i2, redGreen = i2;
+		// 			if (i2 > 255)
+		// 			{
+		// 				blue = 255;
+		// 				redGreen = i1;
+		// 			}
 
-					*pltPtr++ = ColorRgba{Rgba{redGreen, redGreen, blue, 0}};
-				}
-				gdrv::display_palette(plt);
-				free(plt);
-				gfr_display = new gdrv_bitmap8(400, 15, false);
-			}
+		// 			*pltPtr++ = ColorRgba{Rgba{redGreen, redGreen, blue, 0}};
+		// 		}
+		// 		gdrv::display_palette(plt);
+		// 		free(plt);
+		// 		gfr_display = new gdrv_bitmap8(400, 15, false);
+		// 	}
 
-			if (!dtHistoryCounter)
-			{
-				dtHistoryCounter = 300;
-				gdrv::copy_bitmap(render::vscreen, 300, 10, 0, 30, gfr_display, 0, 0);
-				gdrv::fill_bitmap(gfr_display, 300, 10, 0, 0, 0);
-			}
-		}
+		// 	if (!dtHistoryCounter)
+		// 	{
+		// 		dtHistoryCounter = 300;
+		// 		gdrv::copy_bitmap(render::vscreen, 300, 10, 0, 30, gfr_display, 0, 0);
+		// 		gdrv::fill_bitmap(gfr_display, 300, 10, 0, 0, 0);
+		// 	}
+		// }
 
 		if (bQuit) break;
 
-		if (has_focus)
+
+		// if (mouse_down)
+		// {
+		// 	int x, y;
+		// 	SDL_GetMouseState(&x, &y);
+		// 	float dx = (last_mouse_x - x) / static_cast<float>(ScreenSurface->w);
+		// 	float dy = (y - last_mouse_y) / static_cast<float>(ScreenSurface->h);
+		// 	pb::ballset(dx, dy);
+		// }
+
+		// if (!single_step)
+		// {
+		// 	auto dt = static_cast<float>(frameDuration.count());
+		// 	auto dtWhole = static_cast<int>(std::round(dt));
+		// 	pb::frame(dt);
+		// 	if (gfr_display)
+		// 	{
+		// 		auto deltaTPal = dtWhole + 10;
+		// 		auto fillChar = static_cast<uint8_t>(deltaTPal);
+		// 		if (deltaTPal > 236)
+		// 		{
+		// 			fillChar = 1;
+		// 		}
+		// 		gdrv::fill_bitmap(gfr_display, 1, 10, 300 - dtHistoryCounter, 0, fillChar);
+		// 		--dtHistoryCounter;
+		// 	}
+		// 	updateCounter++;
+		// }
+printf("Current Frame: %u\n", frameCounter);
+		// if (UpdateToFrameCounter >= UpdateToFrameRatio)
+		// {
+			RenderUi();
+
+			render::PresentVScreen();
+
+			frameCounter++;
+			// UpdateToFrameCounter -= UpdateToFrameRatio;
+		// }
+
+		auto sdlError = SDL_GetError();
+		if (sdlError[0])
 		{
-			if (mouse_down)
-			{
-				int x, y;
-				SDL_GetMouseState(&x, &y);
-				float dx = (last_mouse_x - x) / static_cast<float>(ScreenSurface->w);
-				float dy = (y - last_mouse_y) / static_cast<float>(ScreenSurface->h);
-				pb::ballset(dx, dy);
-			}
-			if (!single_step)
-			{
-				auto dt = static_cast<float>(frameDuration.count());
-				auto dtWhole = static_cast<int>(std::round(dt));
-				pb::frame(dt);
-				if (gfr_display)
-				{
-					auto deltaTPal = dtWhole + 10;
-					auto fillChar = static_cast<uint8_t>(deltaTPal);
-					if (deltaTPal > 236)
-					{
-						fillChar = 1;
-					}
-					gdrv::fill_bitmap(gfr_display, 1, 10, 300 - dtHistoryCounter, 0, fillChar);
-					--dtHistoryCounter;
-				}
-				updateCounter++;
-			}
-
-			if (UpdateToFrameCounter >= UpdateToFrameRatio)
-			{
-				RenderUi();
-
-				render::PresentVScreen();
-
-				frameCounter++;
-				UpdateToFrameCounter -= UpdateToFrameRatio;
-			}
-
-			auto sdlError = SDL_GetError();
-			if (sdlError[0])
-			{
-				SDL_ClearError();
-				printf("SDL Error: %s\n", sdlError);
-			}
-
-			auto updateEnd = Clock::now();
-			auto targetTimeDelta = TargetFrameTime - DurationMs(updateEnd - frameStart) - sleepRemainder;
-
-			TimePoint frameEnd;
-			if (targetTimeDelta > DurationMs::zero() && !Options.UncappedUpdatesPerSecond)
-			{
-				std::this_thread::sleep_for(targetTimeDelta);
-				frameEnd = Clock::now();
-				sleepRemainder = DurationMs(frameEnd - updateEnd) - targetTimeDelta;
-			}
-			else
-			{
-				frameEnd = updateEnd;
-				sleepRemainder = DurationMs(0);
-			}
-
-			// Limit duration to 2 * target time
-			frameDuration = std::min<DurationMs>(DurationMs(frameEnd - frameStart), 2 * TargetFrameTime);
-			frameStart = frameEnd;
-			UpdateToFrameCounter++;
+			SDL_ClearError();
+			printf("SDL Error: %s\n", sdlError);
 		}
+
+		// auto updateEnd = Clock::now();
+		// auto targetTimeDelta = TargetFrameTime - DurationMs(updateEnd - frameStart) - sleepRemainder;
+
+		// TimePoint frameEnd;
+		// if (targetTimeDelta > DurationMs::zero() && !Options.UncappedUpdatesPerSecond)
+		// {
+		// 	std::this_thread::sleep_for(targetTimeDelta);
+		// 	frameEnd = Clock::now();
+		// 	sleepRemainder = DurationMs(frameEnd - updateEnd) - targetTimeDelta;
+		// }
+		// else
+		// {
+		// 	frameEnd = updateEnd;
+		// 	sleepRemainder = DurationMs(0);
+		// }
+
+		// Limit duration to 2 * target time
+		// frameDuration = std::min<DurationMs>(DurationMs(frameEnd - frameStart), 2 * TargetFrameTime);
+		// frameStart = frameEnd;
+		// UpdateToFrameCounter++;
+
+		SDL_Flip(ScreenSurface);
 	}
 
 	delete gfr_display;
