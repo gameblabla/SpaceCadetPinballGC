@@ -117,6 +117,13 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 				if (zMapHeader.Stride * zMapHeader.Height * 2u == length)
 				{
 					fread(zMap->ZPtr1, 1, length, fileHandle);
+
+#ifdef BIG_ENDIAN
+					for (int z = 0; z < zMapHeader.Stride * zMapHeader.Height; z++)
+					{
+						zMap->ZPtr1[z] = utils::swap_u16(zMap->ZPtr1[z]);
+					}
+#endif
 				}
 				else
 				{
@@ -137,16 +144,16 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 				fread(entryBuffer, 1, fieldSize, fileHandle);
 
 #ifdef BIG_ENDIAN
-				if (entryType == FieldTypes::ShortValue)
+				if (entryType == FieldTypes::ShortValue ||
+					entryType == FieldTypes::Unknown2)
 				{
+					// TODO: Unknown2 is 2 bytes according to partman::_field_size.
+					// I assume it should be byte swapped, but I don't notice any changes.
+					
 					char c1 = entryBuffer[0];
 					char c2 = entryBuffer[1];
 					entryBuffer[0] = c2;
 					entryBuffer[1] = c1;
-				}
-				else if (entryType == FieldTypes::Unknown2)
-				{
-					// TODO: This is 2 bytes according to partman::_field_size. Should be endian swapped
 				}
 				else if (entryType == FieldTypes::Palette)
 				{
