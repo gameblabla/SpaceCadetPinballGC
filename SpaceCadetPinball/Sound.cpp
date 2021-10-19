@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Sound.h"
 
-
 int Sound::num_channels;
 bool Sound::enabled_flag = false;
 int* Sound::TimeStamps = nullptr;

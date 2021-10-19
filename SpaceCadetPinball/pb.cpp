@@ -362,46 +362,48 @@ void pb::loose_focus()
 
 void pb::keyup(uint16_t key)
 {
-	if (game_mode == 1 && !winmain::single_step && !demo_mode)
+	if (game_mode != 1 || winmain::single_step || demo_mode)
+		return;
+
+	if (key == options::Options.Key.LeftFlipper)
 	{
-		if (key == options::Options.Key.LeftFlipper)
-		{
-			MainTable->Message(1001, time_now);
-		}
-		else if (key == options::Options.Key.RightFlipper)
-		{
-			MainTable->Message(1003, time_now);
-		}
-		else if (key == options::Options.Key.Plunger)
-		{
-			MainTable->Message(1005, time_now);
-		}
-		else if (key == options::Options.Key.LeftTableBump)
-		{
-			nudge::un_nudge_right(0, nullptr);
-		}
-		else if (key == options::Options.Key.RightTableBump)
-		{
-			nudge::un_nudge_left(0, nullptr);
-		}
-		else if (key == options::Options.Key.BottomTableBump)
-		{
-			nudge::un_nudge_up(0, nullptr);
-		}
+		MainTable->Message(1001, time_now);
+	}
+	else if (key == options::Options.Key.RightFlipper)
+	{
+		MainTable->Message(1003, time_now);
+	}
+	else if (key == options::Options.Key.Plunger)
+	{
+		MainTable->Message(1005, time_now);
+	}
+	else if (key == options::Options.Key.LeftTableBump)
+	{
+		nudge::un_nudge_right(0, nullptr);
+	}
+	else if (key == options::Options.Key.RightTableBump)
+	{
+		nudge::un_nudge_left(0, nullptr);
+	}
+	else if (key == options::Options.Key.BottomTableBump)
+	{
+		nudge::un_nudge_up(0, nullptr);
 	}
 }
 
 void pb::keydown(uint16_t key)
 {
-	//options::KeyDown(key);
 	if (winmain::single_step || demo_mode)
 		return;
+
 	if (game_mode != 1)
 	{
 		mode_countdown(-1);
 		return;
 	}
-	control::pbctrl_bdoor_controller(static_cast<char>(key));
+
+	// control::pbctrl_bdoor_controller(static_cast<char>(key));
+
 	if (key == options::Options.Key.LeftFlipper)
 	{
 		MainTable->Message(1000, time_now);
