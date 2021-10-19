@@ -31,7 +31,7 @@
 #include <map>
 
 #include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
+#include <SDL/SDL_mixer.h>
 
 typedef char* LPSTR;
 typedef const char* LPCSTR;

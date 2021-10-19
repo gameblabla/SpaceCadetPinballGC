@@ -1,7 +1,5 @@
 #pragma once
 
-#include <SDL/SDL_mixer.h>
-
 constexpr uint32_t SwapByteOrderInt(uint32_t val)
 {
 	return (val >> 24) |
