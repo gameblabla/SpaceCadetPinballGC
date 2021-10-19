@@ -94,14 +94,14 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	pb::reset_table();
 	pb::firsttime_setup();
 
-	unsigned dtHistoryCounter = 300u, updateCounter = 0, frameCounter = 0;
+	//unsigned dtHistoryCounter = 300u, updateCounter = 0, frameCounter = 0;
 
 	pb::replay_level(0);
 
-	auto frameStart = Clock::now();
-	double UpdateToFrameCounter = 0;
-	DurationMs sleepRemainder(0), frameDuration(TargetFrameTime);
-	auto prevTime = frameStart;
+	//auto frameStart = Clock::now();
+	//double UpdateToFrameCounter = 0;
+	//DurationMs sleepRemainder(0), frameDuration(TargetFrameTime);
+	//auto prevTime = frameStart;
 
 	Joystick = SDL_JoystickOpen(0);
 	int hatCount = SDL_JoystickNumHats(Joystick);
@@ -230,7 +230,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		render::PresentVScreen();
 
-		frameCounter++;
+		//frameCounter++;
 		// UpdateToFrameCounter -= UpdateToFrameRatio;
 		// }
 

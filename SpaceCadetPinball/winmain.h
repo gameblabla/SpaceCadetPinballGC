@@ -2,21 +2,21 @@
 #include "gdrv.h"
 
 // SDL Buttons
-#define PAD_BUTTON_A 0
-#define PAD_BUTTON_B 1
-#define PAD_BUTTON_1 2
-#define PAD_BUTTON_2 3
-#define PAD_BUTTON_MINUS 4
-#define PAD_BUTTON_PLUS 5
-#define PAD_BUTTON_Z 7
-#define PAD_BUTTON_C 8
+constexpr uint16_t PAD_BUTTON_A = 0;
+constexpr uint16_t PAD_BUTTON_B = 1;
+constexpr uint16_t PAD_BUTTON_1 = 2;
+constexpr uint16_t PAD_BUTTON_2 = 3;
+constexpr uint16_t PAD_BUTTON_MINUS = 4;
+constexpr uint16_t PAD_BUTTON_PLUS = 5;
+constexpr uint16_t PAD_BUTTON_Z = 7;
+constexpr uint16_t PAD_BUTTON_C = 8;
 
 // Custom DPAD defines, // as SDL values conflict
 // between buttons and DPAD (handled as "hats")
-#define PAD_DPAD_LEFT 256
-#define PAD_DPAD_RIGHT 257
-#define PAD_DPAD_UP 258
-#define PAD_DPAD_DOWN 259
+constexpr uint16_t PAD_DPAD_LEFT = 256;
+constexpr uint16_t PAD_DPAD_RIGHT = 257;
+constexpr uint16_t PAD_DPAD_UP = 258;
+constexpr uint16_t PAD_DPAD_DOWN = 259;
 
 struct SdlTickClock
 {
