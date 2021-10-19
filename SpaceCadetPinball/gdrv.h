@@ -58,7 +58,6 @@ struct gdrv_bitmap8
 	int XPosition;
 	int YPosition;
 	unsigned Resolution;
-	SDL_Surface* Texture;
 };
 
 
@@ -73,7 +72,6 @@ public:
 	                                       gdrv_bitmap8* srcBmp, int srcXOff, int srcYOff);
 	static void grtext_draw_ttext_in_box(LPCSTR text, int xOff, int yOff, int width, int height, int a6);
 	static void ApplyPalette(gdrv_bitmap8& bmp);
-	static void CreatePreview(gdrv_bitmap8& bmp);
 private:
 	static ColorRgba current_palette[256];
 };

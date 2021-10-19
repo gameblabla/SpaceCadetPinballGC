@@ -18,7 +18,6 @@ gdrv_bitmap8::gdrv_bitmap8(int width, int height, bool indexed)
 	Stride = width;
 	IndexedStride = width;
 	BitmapType = BitmapTypes::DibBitmap;
-	Texture = nullptr;
 	IndexedBmpPtr = nullptr;
 	XPosition = 0;
 	YPosition = 0;
@@ -47,7 +46,6 @@ gdrv_bitmap8::gdrv_bitmap8(const dat8BitBmpHeader& header)
 	XPosition = header.XPosition;
 	YPosition = header.YPosition;
 	Resolution = header.Resolution;
-	Texture = nullptr;
 
 	int sizeInBytes;
 	if (BitmapType == BitmapTypes::Spliced)
@@ -72,8 +70,6 @@ gdrv_bitmap8::~gdrv_bitmap8()
 {
 	if (BitmapType != BitmapTypes::None)
 	{
-		if (Texture)
-			SDL_FreeSurface(Texture);
 		delete[] BmpBufPtr1;
 		delete[] IndexedBmpPtr;
 	}
@@ -203,32 +199,4 @@ void gdrv::ApplyPalette(gdrv_bitmap8& bmp)
 			*dst++ = current_palette[*src++];
 		}
 	}
-}
-
-void gdrv::CreatePreview(gdrv_bitmap8& bmp)
-{
-	if (bmp.Texture)
-		return;
-
-	auto texture = SDL_CreateRGBSurfaceFrom
-	(
-		bmp.BmpBufPtr1,
-		bmp.Width,
-		bmp.Height,
-		32,
-		bmp.Width * 4,
-#if BIG_ENDIAN
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00,
-		0x000000ff
-#else
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-#endif
-	);
-
-	bmp.Texture = texture;
 }
