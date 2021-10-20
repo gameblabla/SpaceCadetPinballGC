@@ -20,8 +20,8 @@ public:
     static uint32_t Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right);
     static void CallDisplayList(void *displayList, uint32_t displayListSize);
     static void CreateTextureObject(GXTexObj *textureObject, uint8_t *textureData, uint16_t width, uint16_t height, uint32_t format, uint8_t wrap, uint8_t filter);
-    static void UpdateTextureObjectData(GXTexObj *textureObject, uint8_t *textureData);
     static void LoadTextureObject(GXTexObj *textureObject, uint8_t mapIndex);
     static uint32_t GetTextureSize(uint16_t width, uint16_t height, uint32_t format, uint8_t mipmap, uint8_t maxlod);
+    static void FlushDataCache(void *startAddress, uint32_t size);
     static void SwapBuffers();
 };

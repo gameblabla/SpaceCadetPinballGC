@@ -62,6 +62,7 @@ void wii_graphics::Initialize()
     //     GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
     // else
     //     GX_SetPixelFmt(GX_PF_RGB8_Z24, GX_ZC_LINEAR);
+
     GX_SetCullMode(GX_CULL_BACK);
     GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
     GX_SetDispCopyGamma(GX_GM_1_0);
@@ -164,12 +165,6 @@ void wii_graphics::CreateTextureObject(GXTexObj *textureObject, uint8_t *texture
     GX_InitTexObjFilterMode(textureObject, filter, filter);
 }
 
-void wii_graphics::UpdateTextureObjectData(GXTexObj *textureObject, uint8_t *textureData)
-{
-    GX_InvalidateTexAll();
-    GX_InitTexObjData(textureObject, textureData);
-}
-
 void wii_graphics::LoadTextureObject(GXTexObj *textureObject, uint8_t mapIndex)
 {
     GX_LoadTexObj(textureObject, mapIndex);
@@ -178,6 +173,11 @@ void wii_graphics::LoadTextureObject(GXTexObj *textureObject, uint8_t mapIndex)
 uint32_t wii_graphics::GetTextureSize(uint16_t width, uint16_t height, uint32_t format, uint8_t mipmap, uint8_t maxlod)
 {
     return GX_GetTexBufferSize(width, height, format, mipmap, maxlod);
+}
+
+void wii_graphics::FlushDataCache(void *startAddress, uint32_t size)
+{
+    DCFlushRange(startAddress, size);
 }
 
 void wii_graphics::SwapBuffers()
