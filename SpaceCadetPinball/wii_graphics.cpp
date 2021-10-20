@@ -120,13 +120,18 @@ uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, flo
     //GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGB8, 0);
     GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 
+    memset(displayList, 0, MAX_DISPLAY_LIST_SIZE);
+
     // Invalidate vertex cache
 
     GX_InvVtxCache();
 
-    // Start generating the display list
+    // It's necessary to flush the data cache of the display list
+    // just before filling it.
 
-    memset(displayList, 0, MAX_DISPLAY_LIST_SIZE);
+    DCInvalidateRange(displayList, MAX_DISPLAY_LIST_SIZE);
+
+    // Start generating the display list
 
     GX_BeginDispList(displayList, MAX_DISPLAY_LIST_SIZE);
 

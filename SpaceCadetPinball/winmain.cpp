@@ -46,27 +46,20 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	wii_graphics::LoadOrthoProjectionMatrix(0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 10.0f);
 	wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, 0.5f, 0.5f);
 
-	// void *displayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
-	// uint32_t displayListSize = wii_graphics::Create2DQuadDisplayList(displayList, 0.0f, 1.0f, 0.0f, 1.0f);
+	// Create fullscreen quad display list
 
-	// if (displayListSize == 0)
-	// {
-	// 	printf("Display list exceeded size.");
-	// 	exit(EXIT_FAILURE);
-	// }
-	// else
-	// {
-	// 	printf("Display list size: %u", displayListSize);
-	// }
+	void *displayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
+	uint32_t displayListSize = wii_graphics::Create2DQuadDisplayList(displayList, -0.25f, 0.25f, -0.25f, 0.25f);
 
-	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-	//GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
-	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
-
-	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-	//GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGB8, 0);
-	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+	if (displayListSize == 0)
+	{
+		printf("Display list exceeded size.");
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		printf("Display list size: %u", displayListSize);
+	}
 
 	// Texture data and create texture object
 
@@ -97,9 +90,6 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, (frame & 0xff) / 256.0f, 0.5f);
 
-		// do this before drawing
-		//GX_SetViewport(0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
-
 		offset = 0;
 		for (;;)
 		{
@@ -122,25 +112,11 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 				break;
 		}
 
+		// It's necessary to flush the data cache of the texture after modifying its pixels
+
 		wii_graphics::FlushDataCache(textureData, textureSize);
 
-		GX_Begin(GX_TRIANGLESTRIP, GX_VTXFMT0, 4);
-
-		GX_Position3f32(-0.25f, -0.25f, 0.0f);
-		GX_TexCoord2f32(0.0f, 1.0f);
-
-		GX_Position3f32(0.25f, -0.25f, 0.0f);
-		GX_TexCoord2f32(1.0f, 1.0f);
-
-		GX_Position3f32(-0.25f, 0.25f, 0.0f);
-		GX_TexCoord2f32(0.0f, 0.0f);
-
-		GX_Position3f32(0.25f, 0.25f, 0.0f);
-		GX_TexCoord2f32(1.0f, 0.0f);
-
-		GX_End();
-
-		//wii_graphics::CallDisplayList(displayList, displayListSize);
+		wii_graphics::CallDisplayList(displayList, displayListSize);
 		wii_graphics::SwapBuffers();
 	}
 
