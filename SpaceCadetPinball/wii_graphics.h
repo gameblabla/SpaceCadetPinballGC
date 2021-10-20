@@ -8,6 +8,7 @@ constexpr uint32_t MAX_DISPLAY_LIST_SIZE = 128;
 class wii_graphics
 {
 private:
+    static void *gpFifo;
     static void *frameBuffer[2];
     static GXRModeObj *rmode;
     static uint32_t currentFramebuffer;

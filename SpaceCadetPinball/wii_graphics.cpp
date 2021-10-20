@@ -4,6 +4,7 @@
 #include <cstring>
 #include <malloc.h>
 
+void *wii_graphics::gpFifo = nullptr;
 void *wii_graphics::frameBuffer[2] = {nullptr, nullptr};
 GXRModeObj *wii_graphics::rmode = nullptr;
 uint32_t wii_graphics::currentFramebuffer = 0;
@@ -37,11 +38,10 @@ void wii_graphics::Initialize()
 
     // Setup the fifo and then init the flipper
 
-    void *gp_fifo = NULL;
-    gp_fifo = memalign(32, FIFO_SIZE);
-    memset(gp_fifo, 0, FIFO_SIZE);
+    gpFifo = memalign(32, FIFO_SIZE);
+    memset(gpFifo, 0, FIFO_SIZE);
 
-    GX_Init(gp_fifo, FIFO_SIZE);
+    GX_Init(gpFifo, FIFO_SIZE);
 
     // Set some initial graphics state
 
@@ -58,6 +58,10 @@ void wii_graphics::Initialize()
     GX_SetCopyFilter(rmode->aa, rmode->sample_pattern, GX_TRUE, rmode->vfilter);
     GX_SetFieldMode(rmode->field_rendering, ((rmode->viHeight == 2 * rmode->xfbHeight) ? GX_ENABLE : GX_DISABLE));
 
+    // if (rmode->aa)
+    //     GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
+    // else
+    //     GX_SetPixelFmt(GX_PF_RGB8_Z24, GX_ZC_LINEAR);
     GX_SetCullMode(GX_CULL_BACK);
     GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
     GX_SetDispCopyGamma(GX_GM_1_0);
