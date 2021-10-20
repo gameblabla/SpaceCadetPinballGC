@@ -61,6 +61,8 @@ void wii_graphics::Initialize()
     GX_SetCullMode(GX_CULL_BACK);
     GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
     GX_SetDispCopyGamma(GX_GM_1_0);
+    GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+    GX_SetColorUpdate(GX_TRUE);
 
     // Texture and TEV configuration
 
@@ -176,15 +178,10 @@ uint32_t wii_graphics::GetTextureSize(uint16_t width, uint16_t height, uint32_t 
 
 void wii_graphics::SwapBuffers()
 {
-    GX_DrawDone();
-
-    currentFramebuffer ^= 1;
-    GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
-    GX_SetColorUpdate(GX_TRUE);
     GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
-
+    GX_DrawDone();
     VIDEO_SetNextFramebuffer(frameBuffer[currentFramebuffer]);
-
     VIDEO_Flush();
     VIDEO_WaitVSync();
+    currentFramebuffer ^= 1;
 }
