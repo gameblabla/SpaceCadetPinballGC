@@ -1,13 +1,17 @@
 #include "pch.h"
 #include "winmain.h"
 
+#include <malloc.h>
+#include <wiiuse/wpad.h>
+
 #include "control.h"
 #include "midi.h"
-#include "pinball.h"
 #include "options.h"
 #include "pb.h"
+#include "pinball.h"
 #include "render.h"
 #include "Sound.h"
+#include "wii_graphics.h"
 
 int winmain::return_value = 0;
 int winmain::bQuit = 0;
@@ -20,22 +24,97 @@ int winmain::last_mouse_y;
 int winmain::mouse_down;
 int winmain::no_time_loss;
 
-gdrv_bitmap8* winmain::gfr_display = nullptr;
+gdrv_bitmap8 *winmain::gfr_display = nullptr;
 std::string winmain::DatFileName;
-SDL_Surface* winmain::ScreenSurface = nullptr;
-SDL_Joystick* winmain::Joystick = nullptr;
+SDL_Surface *winmain::ScreenSurface = nullptr;
+SDL_Joystick *winmain::Joystick = nullptr;
 bool winmain::ShowSpriteViewer = false;
 bool winmain::LaunchBallEnabled = true;
 bool winmain::HighScoresEnabled = true;
 bool winmain::DemoActive = false;
-char* winmain::BasePath;
+char *winmain::BasePath;
 std::string winmain::FpsDetails;
 double winmain::UpdateToFrameRatio;
 winmain::DurationMs winmain::TargetFrameTime;
-optionsStruct& winmain::Options = options::Options;
+optionsStruct &winmain::Options = options::Options;
 
 int winmain::WinMain(LPCSTR lpCmdLine)
 {
+	// Initialize graphics
+	
+	wii_graphics::Initialize();
+	wii_graphics::LoadOrthoProjectionMatrix(0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 10.0f);
+	wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, 0.0f, 0.0f);
+
+	void *displayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
+	uint32_t displayListSize = wii_graphics::Create2DQuadDisplayList(displayList, 0.0f, 1.0f, 0.0f, 1.0f);
+
+	if (displayListSize == 0)
+	{
+		printf("Display list exceeded size.");
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		printf("Display list size: %u", displayListSize);
+	}
+
+	// Texture data and create texture object
+
+	uint16_t texWidth = 512;
+	uint16_t texHeight = 512;
+	uint32_t textureSize = wii_graphics::GetTextureSize(texWidth, texHeight, GX_TF_RGBA8, 0, 0);
+	GXTexObj textureObject;
+	uint8_t *textureData = (uint8_t *)memalign(32, textureSize);
+	memset(textureData, 0, textureSize);
+	wii_graphics::CreateTextureObject(&textureObject, textureData, texWidth, texHeight, GX_TF_RGBA8, GX_CLAMP, GX_NEAR);
+	wii_graphics::LoadTextureObject(&textureObject, GX_TEXMAP0);
+
+	uint32_t offset = 0;
+	uint32_t frame = 0;
+
+	WPAD_Init();
+
+	while (1)
+	{
+		WPAD_ScanPads();
+
+		if (WPAD_ButtonsDown(0) & WPAD_BUTTON_HOME)
+			break;
+
+		// do this before drawing
+		//GX_SetViewport(0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
+
+		offset = 0;
+		for (;;)
+		{
+			textureData[offset] = 0xff; // A
+			offset++;
+
+			textureData[offset] = (offset + frame) & 0xff; // R
+			offset += 31;
+
+			textureData[offset] = (0x00 + frame) & 0xff; // G
+			offset++;
+
+			textureData[offset] = (0xff + frame) & 0xff; // B
+			offset -= 31;
+
+			if ((offset & 31) == 0)
+				offset += 32;
+
+			if (offset >= textureSize)
+				break;
+		}
+		frame++;
+
+		wii_graphics::UpdateTextureObjectData(&textureObject, textureData);
+		wii_graphics::CallDisplayList(displayList, displayListSize);
+		wii_graphics::SwapBuffers();
+	}
+
+	return 0;
+
 	bQuit = false;
 
 	std::set_new_handler(memalloc_failure);
@@ -51,7 +130,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	atexit(SDL_Quit);
 	SDL_ShowCursor(SDL_DISABLE);
 
-	BasePath = (char*)"sd:/apps/SpaceCadetPinball/Data/";
+	BasePath = (char *)"sd:/apps/SpaceCadetPinball/Data/";
 
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
 	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
@@ -398,8 +477,8 @@ void winmain::memalloc_failure()
 {
 	midi::music_stop();
 	Sound::Close();
-	char* caption = pinball::get_rc_string(170, 0);
-	char* text = pinball::get_rc_string(179, 0);
+	char *caption = pinball::get_rc_string(170, 0);
+	char *text = pinball::get_rc_string(179, 0);
 	fprintf(stderr, "%s %s\n", caption, text);
 	std::exit(1);
 	exit(EXIT_FAILURE);
