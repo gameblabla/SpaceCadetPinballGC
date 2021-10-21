@@ -5,6 +5,7 @@
 #include "partman.h"
 #include "pb.h"
 #include "score.h"
+#include "utils.h"
 #include "winmain.h"
 
 ColorRgba gdrv::current_palette[256]{};
@@ -79,16 +80,16 @@ int gdrv::display_palette(ColorRgba* plt)
 {
 	const uint32_t sysPaletteColors[]
 	{
-		0xff000000, // Color 0: transparent
-		0xff000080,
-		0xff008000,
-		0xff008080,
-		0xff800000,
-		0xff800080,
-		0xff808000,
-		0xffC0C0C0,
-		0xffC0DCC0,
-		0xffF0CAA6
+		utils::swap_u32(0xff000000), // Color 0: transparent
+		utils::swap_u32(0xff000080),
+		utils::swap_u32(0xff008000),
+		utils::swap_u32(0xff008080),
+		utils::swap_u32(0xff800000),
+		utils::swap_u32(0xff800080),
+		utils::swap_u32(0xff808000),
+		utils::swap_u32(0xffC0C0C0),
+		utils::swap_u32(0xffC0DCC0),
+		utils::swap_u32(0xffF0CAA6)
 	};
 
 	memcpy(current_palette, sysPaletteColors, sizeof sysPaletteColors);

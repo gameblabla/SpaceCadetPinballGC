@@ -9,7 +9,8 @@
             ],
             "defines":
             [
-                "BIG_ENDIAN"
+                "BIG_ENDIAN",
+                "HW_RVL"
             ],
             "compilerPath": "${DEVKITPRO}/devkitPPC/bin/powerpc-eabi-gcc",
             "compilerArgs": []
