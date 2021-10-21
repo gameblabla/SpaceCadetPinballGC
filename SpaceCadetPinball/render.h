@@ -47,6 +47,8 @@ public:
 	static void set_background_zmap(struct zmap_header_type* zMap, int offsetX, int offsetY);
 	static void ball_set(render_sprite_type_struct* sprite, gdrv_bitmap8* bmp, float depth, int xPos, int yPos);
 	static void shift(int offsetX, int offsetY);
+	static int get_offset_x();
+	static int get_offset_y();
 	static void build_occlude_list();
 private:
 	static std::vector<render_sprite_type_struct*> dirty_list, sprite_list, ball_list;

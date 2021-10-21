@@ -17,7 +17,7 @@ public:
     static void Initialize();
     static void LoadOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far);
     static void Load2DModelViewMatrix(uint32_t matrixIndex, float x, float y);
-    static uint32_t Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right);
+    static uint32_t Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right, float uvTop, float uvBottom, float uvLeft, float uvRight);
     static void CallDisplayList(void *displayList, uint32_t displayListSize);
     static void CreateTextureObject(GXTexObj *textureObject, uint8_t *textureData, uint16_t width, uint16_t height, uint32_t format, uint8_t wrap, uint8_t filter);
     static void LoadTextureObject(GXTexObj *textureObject, uint8_t mapIndex);

@@ -75,23 +75,6 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	// Initialize graphics
 
 	wii_graphics::Initialize();
-	wii_graphics::LoadOrthoProjectionMatrix(0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 10.0f);
-	wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, 0.5f, 0.5f);
-
-	// Create fullscreen quad display list
-
-	void *displayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
-	uint32_t displayListSize = wii_graphics::Create2DQuadDisplayList(displayList, -0.5f, 0.5f, -0.5f, 0.5f);
-
-	if (displayListSize == 0)
-	{
-		printf("Display list exceeded size.");
-		exit(EXIT_FAILURE);
-	}
-	else
-	{
-		printf("Display list size: %u", displayListSize);
-	}
 
 	// Texture data and create texture object
 
@@ -104,6 +87,42 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	memset(textureData, 0, textureSize);
 	wii_graphics::CreateTextureObject(&textureObject, textureData, texWidth, texHeight, GX_TF_RGBA8, GX_CLAMP, GX_LINEAR);
 	wii_graphics::LoadTextureObject(&textureObject, GX_TEXMAP0);
+
+	// Load the projection matrix according to screen texture resolution
+
+	wii_graphics::LoadOrthoProjectionMatrix(0, texHeight, 0, texWidth, 0.1f, 10.0f);
+
+	// Create quad display list for the board and for the side bar
+
+	// Normal values for the board's size are: 0, texHeight, 0, 375
+	// but reduced the size a bit to compensate overscan in a TV.
+	// Ideally this should be done adjusting the VI, but I was unsuccessful and had crashes.
+
+	void *boardDisplayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
+	uint32_t boardDisplayListSize = wii_graphics::Create2DQuadDisplayList(boardDisplayList, 12, texHeight - 10, 16, 371, 0.0f, 1.0f, 0.0f, 0.625f);
+
+	if (boardDisplayListSize == 0)
+	{
+		printf("Board display list exceeded size.");
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		printf("Board display list size: %u", boardDisplayListSize);
+	}
+
+	void *sidebarDisplayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
+	uint32_t sidebarDisplayListSize = wii_graphics::Create2DQuadDisplayList(sidebarDisplayList, 0, texHeight, 375, texWidth, 0.0f, 1.0f, 0.625f, 1.0f);
+
+	if (sidebarDisplayListSize == 0)
+	{
+		printf("Sidebar display list exceeded size.");
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		printf("Sidebar display list size: %u", sidebarDisplayListSize);
+	}
 
 	// Initialize input
 
@@ -118,9 +137,6 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	// Begin main loop
 
 	bQuit = false;
-
-	// printf("ERRROORRRRRRR");
-	// exit(1);
 
 	while (!bQuit)
 	{
@@ -196,7 +212,12 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		// Render fullscreen quad
 
-		wii_graphics::CallDisplayList(displayList, displayListSize);
+		wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, render::get_offset_x(), render::get_offset_y());
+		wii_graphics::CallDisplayList(boardDisplayList, boardDisplayListSize);
+
+		wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, 0.0f, 0.0f);
+		wii_graphics::CallDisplayList(sidebarDisplayList, sidebarDisplayListSize);
+
 		wii_graphics::SwapBuffers();
 	}
 

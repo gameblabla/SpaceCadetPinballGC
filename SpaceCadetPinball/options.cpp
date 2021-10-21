@@ -143,15 +143,15 @@ void options::toggle(Menu1 uIDCheckItem)
 
 void options::KeyDown(int key)
 {
-	if (ControlWaitingForKey)
-	{
-		// Skip function keys, just in case.
-		if (key < SDLK_F1 || key > SDLK_F12)
-		{
-			ControlWaitingForKey->Option = key;
-			ControlWaitingForKey = nullptr;
-		}
-	}
+	// if (ControlWaitingForKey)
+	// {
+	// 	// Skip function keys, just in case.
+	// 	if (key < SDLK_F1 || key > SDLK_F12)
+	// 	{
+	// 		ControlWaitingForKey->Option = key;
+	// 		ControlWaitingForKey = nullptr;
+	// 	}
+	// }
 }
 
 const std::string& options::GetSetting(const std::string& key, const std::string& value)

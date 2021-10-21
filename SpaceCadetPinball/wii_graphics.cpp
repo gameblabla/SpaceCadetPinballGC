@@ -4,6 +4,8 @@
 #include <cstring>
 #include <malloc.h>
 
+// #include "ogc/conf.h"
+
 void *wii_graphics::gpFifo = nullptr;
 void *wii_graphics::frameBuffer[2] = {nullptr, nullptr};
 GXRModeObj *wii_graphics::rmode = nullptr;
@@ -20,11 +22,42 @@ void wii_graphics::Initialize()
     rmode = VIDEO_GetPreferredMode(NULL);
     printf("Framebuffer: %ux%u", rmode->fbWidth, rmode->efbHeight);
     printf("VI: %ux%u", rmode->viWidth, rmode->viHeight);
+    printf("TV Mode: %u", rmode->viTVMode);
+    printf("XFB Mode: %u", rmode->xfbMode);
+    printf("XFB Height: %u", rmode->xfbHeight);
     printf("Antialiasing: %u", rmode->aa);
+    printf("Field rendering: %u", rmode->field_rendering);
 
     frameBuffer[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
     frameBuffer[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
     currentFramebuffer = 0;
+
+    // if (CONF_GetAspectRatio() == CONF_ASPECT_16_9)
+    // {
+    //     rmode->viWidth = 600;
+    // }
+    // else
+    // {
+    //     rmode->viWidth = 600;
+    // }
+
+    // if (rmode == &TVPal576IntDfScale || rmode == &TVPal576ProgScale)
+    // {
+    //     rmode->viXOrigin = (VI_MAX_WIDTH_PAL - rmode->viWidth) / 2;
+    //     rmode->viYOrigin = (VI_MAX_HEIGHT_PAL - rmode->viHeight) / 2;
+    // }
+    // else
+    // {
+    //     rmode->viXOrigin = (VI_MAX_WIDTH_NTSC - rmode->viWidth) / 2;
+    //     rmode->viYOrigin = (VI_MAX_HEIGHT_NTSC - rmode->viHeight) / 2;
+    // }
+
+    // rmode->fbWidth = 480;
+    // rmode->viWidth = 512;
+    // rmode->efbHeight = 400;
+    // rmode->viHeight = 320;
+    // rmode->viXOrigin = (VI_MAX_WIDTH_NTSC - rmode->viWidth) >> 1;
+    // rmode->viYOrigin = (VI_MAX_HEIGHT_NTSC - rmode->viHeight) >> 1;
 
     // Set some video properties
 
@@ -45,7 +78,7 @@ void wii_graphics::Initialize()
 
     // Set some initial graphics state
 
-    GXColor clearColor = {64, 16, 32, 255};
+    GXColor clearColor = {0, 0, 0, 255};
     GX_SetCopyClear(clearColor, GX_MAX_Z24);
 
     float yscale = GX_GetYScaleFactor(rmode->efbHeight, rmode->xfbHeight);
@@ -107,7 +140,7 @@ void wii_graphics::Load2DModelViewMatrix(uint32_t matrixIndex, float x, float y)
     GX_SetCurrentMtx(matrixIndex);
 }
 
-uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right)
+uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right, float uvTop, float uvBottom, float uvLeft, float uvRight)
 {
     // Configure vertex formats
 
@@ -138,19 +171,19 @@ uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, flo
     GX_Begin(GX_TRIANGLESTRIP, GX_VTXFMT0, 4);
     GX_Position3f32(left, top, 0.0f);
     //GX_Color3f32(1.0f, 0.0f, 0.0f);
-    GX_TexCoord2f32(0.0f, 0.0f);
+    GX_TexCoord2f32(uvLeft, uvTop);
 
     GX_Position3f32(right, top, 0.0f);
     //GX_Color3f32(0.0f, 1.0f, 0.0f);
-    GX_TexCoord2f32(1.0f, 0.0f);
+    GX_TexCoord2f32(uvRight, uvTop);
 
     GX_Position3f32(left, bottom, 0.0f);
     //GX_Color3f32(0.0f, 0.0f, 1.0f);
-    GX_TexCoord2f32(0.0f, 1.0f);
+    GX_TexCoord2f32(uvLeft, uvBottom);
 
     GX_Position3f32(right, bottom, 0.0f);
     //GX_Color3f32(1.0f, 1.0f, 1.0f);
-    GX_TexCoord2f32(1.0f, 1.0f);
+    GX_TexCoord2f32(uvRight, uvBottom);
 
     GX_End();
 

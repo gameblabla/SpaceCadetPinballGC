@@ -378,6 +378,16 @@ void render::shift(int offsetX, int offsetY)
 	offset_y += offsetY;
 }
 
+int render::get_offset_x()
+{
+	return offset_x;
+}
+
+int render::get_offset_y()
+{
+	return offset_y;
+}
+
 void render::build_occlude_list()
 {
 	std::vector<render_sprite_type_struct*>* spriteArr = nullptr;
