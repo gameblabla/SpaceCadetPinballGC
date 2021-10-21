@@ -1,23 +1,6 @@
 #pragma once
 #include "gdrv.h"
 
-// SDL Buttons
-constexpr uint16_t PAD_BUTTON_A = 0;
-constexpr uint16_t PAD_BUTTON_B = 1;
-constexpr uint16_t PAD_BUTTON_1 = 2;
-constexpr uint16_t PAD_BUTTON_2 = 3;
-constexpr uint16_t PAD_BUTTON_MINUS = 4;
-constexpr uint16_t PAD_BUTTON_PLUS = 5;
-constexpr uint16_t PAD_BUTTON_Z = 7;
-constexpr uint16_t PAD_BUTTON_C = 8;
-
-// Custom DPAD defines, // as SDL values conflict
-// between buttons and DPAD (handled as "hats")
-constexpr uint16_t PAD_DPAD_LEFT = 256;
-constexpr uint16_t PAD_DPAD_RIGHT = 257;
-constexpr uint16_t PAD_DPAD_UP = 258;
-constexpr uint16_t PAD_DPAD_DOWN = 259;
-
 struct SdlTickClock
 {
 	using duration = std::chrono::milliseconds;
@@ -28,7 +11,7 @@ struct SdlTickClock
 
 	static time_point now() noexcept
 	{
-		return time_point{duration{SDL_GetTicks()}};
+		return time_point{duration{/*SDL_GetTicks()*/0}};
 	}
 };
 
@@ -41,24 +24,20 @@ class winmain
 public:
 	static std::string DatFileName;
 	static int single_step;
-	static SDL_Surface* ScreenSurface;
-	static SDL_Joystick* Joystick;
 	static bool LaunchBallEnabled;
 	static bool HighScoresEnabled;
 	static bool DemoActive;
 	static char* BasePath;
 
 	static int WinMain(LPCSTR lpCmdLine);
-	static int event_handler(const SDL_Event* event);
 	[[ noreturn ]] static void memalloc_failure();
 	static void end_pause();
 	static void new_game();
 	static void pause();
 	static void UpdateFrameRate();
 private:
-	static int return_value, bQuit, DispFrameRate, DispGRhistory, activated;
+	static int bQuit, DispFrameRate, DispGRhistory, activated;
 	static int mouse_down, last_mouse_x, last_mouse_y, no_time_loss;
-	static gdrv_bitmap8* gfr_display;
 	static std::string FpsDetails;
 	static bool ShowSpriteViewer;
 	static double UpdateToFrameRatio;

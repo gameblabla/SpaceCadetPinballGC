@@ -25,12 +25,12 @@ const ControlRef options::Controls[6]
 
 void options::init()
 {
-	Options.KeyDft.LeftFlipper = PAD_BUTTON_Z;
-	Options.KeyDft.RightFlipper = PAD_BUTTON_B;
-	Options.KeyDft.Plunger = PAD_BUTTON_A;
-	Options.KeyDft.LeftTableBump = PAD_DPAD_RIGHT;
-	Options.KeyDft.RightTableBump = PAD_DPAD_LEFT;
-	Options.KeyDft.BottomTableBump = PAD_DPAD_UP;
+	Options.KeyDft.LeftFlipper = 0;
+	Options.KeyDft.RightFlipper = 0;
+	Options.KeyDft.Plunger = 0;
+	Options.KeyDft.LeftTableBump = 0;
+	Options.KeyDft.RightTableBump = 0;
+	Options.KeyDft.BottomTableBump = 0;
 	Options.Key = Options.KeyDft;
 
 	Options.Sounds = get_int("Sounds", true);

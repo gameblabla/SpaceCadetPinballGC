@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "pb.h"
 
-
 #include "control.h"
 #include "fullscrn.h"
 #include "high_score.h"
@@ -26,6 +25,7 @@
 #include "score.h"
 #include "TPinballTable.h"
 #include "TTextBox.h"
+#include "wii_input.h"
 
 TPinballTable* pb::MainTable = nullptr;
 DatFile* pb::record_table = nullptr;
@@ -360,38 +360,41 @@ void pb::loose_focus()
 		MainTable->Message(1010, time_now);
 }
 
-void pb::keyup(uint16_t key)
+void pb::keyup(uint32_t wiiButton, uint32_t gcButton)
 {
 	if (game_mode != 1 || winmain::single_step || demo_mode)
 		return;
 
-	if (key == options::Options.Key.LeftFlipper)
+	if ((wiiButton & WPAD_NUNCHUK_BUTTON_Z) || (gcButton & PAD_TRIGGER_L))
 	{
 		MainTable->Message(1001, time_now);
 	}
-	else if (key == options::Options.Key.RightFlipper)
+
+	if ((wiiButton & WPAD_BUTTON_B) || (gcButton & PAD_TRIGGER_R))
 	{
 		MainTable->Message(1003, time_now);
 	}
-	else if (key == options::Options.Key.Plunger)
+
+	if ((wiiButton & WPAD_BUTTON_A) || (gcButton & PAD_BUTTON_A))
 	{
 		MainTable->Message(1005, time_now);
 	}
-	else if (key == options::Options.Key.LeftTableBump)
+
+	if ((wiiButton & WPAD_BUTTON_RIGHT) || (gcButton & PAD_BUTTON_RIGHT))
 	{
 		nudge::un_nudge_right(0, nullptr);
 	}
-	else if (key == options::Options.Key.RightTableBump)
+	else if ((wiiButton & WPAD_BUTTON_LEFT) || (gcButton & PAD_BUTTON_LEFT))
 	{
 		nudge::un_nudge_left(0, nullptr);
 	}
-	else if (key == options::Options.Key.BottomTableBump)
+	else if ((wiiButton & WPAD_BUTTON_UP) || (gcButton & PAD_BUTTON_UP))
 	{
 		nudge::un_nudge_up(0, nullptr);
 	}
 }
 
-void pb::keydown(uint16_t key)
+void pb::keydown(uint32_t wiiButton, uint32_t gcButton)
 {
 	if (winmain::single_step || demo_mode)
 		return;
@@ -404,90 +407,88 @@ void pb::keydown(uint16_t key)
 
 	// control::pbctrl_bdoor_controller(static_cast<char>(key));
 
-	if (key == options::Options.Key.LeftFlipper)
+	if ((wiiButton & WPAD_NUNCHUK_BUTTON_Z) || (gcButton & PAD_TRIGGER_L))
 	{
 		MainTable->Message(1000, time_now);
-		return;
 	}
-	if (key == options::Options.Key.RightFlipper)
+
+	if ((wiiButton & WPAD_BUTTON_B) || (gcButton & PAD_TRIGGER_R))
 	{
 		MainTable->Message(1002, time_now);
 	}
-	else
+
+	if ((wiiButton & WPAD_BUTTON_A) || (gcButton & PAD_BUTTON_A))
 	{
-		if (key == options::Options.Key.Plunger)
-		{
-			MainTable->Message(1004, time_now);
-			return;
-		}
-		if (key == options::Options.Key.LeftTableBump)
-		{
-			if (!MainTable->TiltLockFlag)
-				nudge::nudge_right();
-			return;
-		}
-		if (key == options::Options.Key.RightTableBump)
-		{
-			if (!MainTable->TiltLockFlag)
-				nudge::nudge_left();
-			return;
-		}
-		if (key == options::Options.Key.BottomTableBump)
-		{
-			if (!MainTable->TiltLockFlag)
-				nudge::nudge_up();
-			return;
-		}
+		MainTable->Message(1004, time_now);
 	}
-	if (cheat_mode)
+
+	if ((wiiButton & WPAD_BUTTON_RIGHT) || (gcButton & PAD_BUTTON_RIGHT))
 	{
-		switch (key)
-		{
-		case 'b':
-			TBall* ball;
-			if (MainTable->BallList.empty())
-			{
-				ball = new TBall(MainTable);
-			}
-			else
-			{
-				for (auto index = 0u; ;)
-				{
-					ball = MainTable->BallList.at(index);
-					if (!ball->ActiveFlag)
-						break;
-					++index;
-					if (index >= MainTable->BallList.size())
-					{
-						ball = new TBall(MainTable);
-						break;
-					}
-				}
-			}
-			ball->Position.X = 1.0;
-			ball->ActiveFlag = 1;
-			ball->Position.Z = ball->Offset;
-			ball->Position.Y = 1.0;
-			ball->Acceleration.Z = 0.0;
-			ball->Acceleration.Y = 0.0;
-			ball->Acceleration.X = 0.0;
-			break;
-		case 'h':
-			char String1[200];
-			strncpy(String1, pinball::get_rc_string(26, 0), sizeof String1 - 1);
-			high_score::show_and_set_high_score_dialog(highscore_table, 1000000000, 1, String1);
-			break;
-		case 'r':
-			control::cheat_bump_rank();
-			break;
-		case 's':
-			MainTable->AddScore(static_cast<int>(RandFloat() * 1000000.0f));
-			break;
-		case SDLK_F12:
-			MainTable->port_draw();
-			break;
-		}
+		if (!MainTable->TiltLockFlag)
+			nudge::nudge_right();
 	}
+
+	if ((wiiButton & WPAD_BUTTON_LEFT) || (gcButton & PAD_BUTTON_LEFT))
+	{
+		if (!MainTable->TiltLockFlag)
+			nudge::nudge_left();
+	}
+
+	if ((wiiButton & WPAD_BUTTON_UP) || (gcButton & PAD_BUTTON_UP))
+	{
+		if (!MainTable->TiltLockFlag)
+			nudge::nudge_up();
+	}
+
+	// if (cheat_mode)
+	// {
+	// 	switch (key)
+	// 	{
+	// 	case 'b':
+	// 		TBall *ball;
+	// 		if (MainTable->BallList.empty())
+	// 		{
+	// 			ball = new TBall(MainTable);
+	// 		}
+	// 		else
+	// 		{
+	// 			for (auto index = 0u;;)
+	// 			{
+	// 				ball = MainTable->BallList.at(index);
+	// 				if (!ball->ActiveFlag)
+	// 					break;
+	// 				++index;
+	// 				if (index >= MainTable->BallList.size())
+	// 				{
+	// 					ball = new TBall(MainTable);
+	// 					break;
+	// 				}
+	// 			}
+	// 		}
+	// 		ball->Position.X = 1.0;
+	// 		ball->ActiveFlag = 1;
+	// 		ball->Position.Z = ball->Offset;
+	// 		ball->Position.Y = 1.0;
+	// 		ball->Acceleration.Z = 0.0;
+	// 		ball->Acceleration.Y = 0.0;
+	// 		ball->Acceleration.X = 0.0;
+	// 		break;
+	// 	case 'h':
+	// 		char String1[200];
+	// 		strncpy(String1, pinball::get_rc_string(26, 0), sizeof String1 - 1);
+	// 		high_score::show_and_set_high_score_dialog(highscore_table, 1000000000, 1, String1);
+	// 		break;
+	// 	case 'r':
+	// 		control::cheat_bump_rank();
+	// 		break;
+	// 	case 's':
+	// 		MainTable->AddScore(static_cast<int>(RandFloat() * 1000000.0f));
+	// 		break;
+	// 	case SDLK_F12:
+	// 		MainTable->port_draw();
+	// 		break;
+	// 	}
+	// }
 }
 
 int pb::mode_countdown(int time)

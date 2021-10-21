@@ -5,18 +5,13 @@
 
 #include "winmain.h"
 
-int MainActual(LPCSTR lpCmdLine)
-{
-	return winmain::WinMain(lpCmdLine);
-}
-
-int SDL_main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 	std::string cmdLine;
 	for (int i = 1; i < argc; i++)
 		cmdLine += argv[i];
 
-	return MainActual(cmdLine.c_str());
+	return winmain::WinMain(cmdLine.c_str());
 }
 
 #if _WIN32
