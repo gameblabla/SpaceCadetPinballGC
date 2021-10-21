@@ -11,6 +11,7 @@
 #include "pinball.h"
 #include "render.h"
 #include "Sound.h"
+#include "utils.h"
 #include "wii_graphics.h"
 
 int winmain::return_value = 0;
@@ -40,109 +41,16 @@ optionsStruct &winmain::Options = options::Options;
 
 int winmain::WinMain(LPCSTR lpCmdLine)
 {
-	// Initialize graphics
-
-	wii_graphics::Initialize();
-	wii_graphics::LoadOrthoProjectionMatrix(0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 10.0f);
-	wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, 0.5f, 0.5f);
-
-	// Create fullscreen quad display list
-
-	void *displayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
-	uint32_t displayListSize = wii_graphics::Create2DQuadDisplayList(displayList, -0.25f, 0.25f, -0.25f, 0.25f);
-
-	if (displayListSize == 0)
-	{
-		printf("Display list exceeded size.");
-		exit(EXIT_FAILURE);
-	}
-	else
-	{
-		printf("Display list size: %u", displayListSize);
-	}
-
-	// Texture data and create texture object
-
-	uint16_t texWidth = 64;
-	uint16_t texHeight = 64;
-	uint32_t textureSize = wii_graphics::GetTextureSize(texWidth, texHeight, GX_TF_RGBA8, 0, 0);
-	GXTexObj textureObject;
-	uint8_t *textureData = (uint8_t *)memalign(32, textureSize);
-	memset(textureData, 0, textureSize);
-	wii_graphics::CreateTextureObject(&textureObject, textureData, texWidth, texHeight, GX_TF_RGBA8, GX_CLAMP, GX_NEAR);
-	wii_graphics::LoadTextureObject(&textureObject, GX_TEXMAP0);
-
-	uint32_t offset = 0;
-	uint32_t frame = 0;
-
-	WPAD_Init();
-
-	while (1)
-	{
-		WPAD_ScanPads();
-
-		if (WPAD_ButtonsDown(0) & WPAD_BUTTON_HOME)
-			break;
-
-		GX_InvalidateTexAll();
-
-		frame++;
-
-		wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, (frame & 0xff) / 256.0f, 0.5f);
-
-		offset = 0;
-		for (;;)
-		{
-			textureData[offset] = 0xff; // A
-			offset++;
-
-			textureData[offset] = (offset + frame) & 0xff; // R
-			offset += 31;
-
-			textureData[offset] = (0x00 + frame) & 0xff; // G
-			offset++;
-
-			textureData[offset] = (0xff + frame) & 0xff; // B
-			offset -= 31;
-
-			if ((offset & 31) == 0)
-				offset += 32;
-
-			if (offset >= textureSize)
-				break;
-		}
-
-		// It's necessary to flush the data cache of the texture after modifying its pixels
-
-		wii_graphics::FlushDataCache(textureData, textureSize);
-
-		wii_graphics::CallDisplayList(displayList, displayListSize);
-		wii_graphics::SwapBuffers();
-	}
-
-	return 0;
-
-	bQuit = false;
-
 	std::set_new_handler(memalloc_failure);
-
-	// SDL init
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
-	{
-		fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
-		SDL_Delay(5000);
-		exit(EXIT_FAILURE);
-	}
-
 	atexit(SDL_Quit);
-	SDL_ShowCursor(SDL_DISABLE);
 
 	BasePath = (char *)"sd:/apps/SpaceCadetPinball/Data/";
 
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
 	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
 
-	/*Check for full tilt .dat file and switch to it automatically*/
+	// Check for full tilt .dat file and switch to it automatically
+
 	auto cadetFilePath = pinball::make_path_name("CADET.DAT");
 	auto cadetDat = fopen(cadetFilePath.c_str(), "r");
 	if (cadetDat)
@@ -152,15 +60,8 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		pb::FullTiltMode = true;
 	}
 
-	ScreenSurface = SDL_SetVideoMode(640, 480, 16, SDL_DOUBLEBUF);
-	if (ScreenSurface == NULL)
-	{
-		fprintf(stderr, "Unable to set video: %s\n", SDL_GetError());
-		SDL_Delay(5000);
-		exit(EXIT_FAILURE);
-	}
-
 	// PB init from message handler
+
 	{
 		options::init();
 		if (!Sound::Init(Options.SoundChannels, Options.Sounds))
@@ -176,6 +77,48 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	// Initialize graphics
+
+	wii_graphics::Initialize();
+	wii_graphics::LoadOrthoProjectionMatrix(0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 10.0f);
+	wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, 0.5f, 0.5f);
+
+	// Create fullscreen quad display list
+
+	void *displayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
+	uint32_t displayListSize = wii_graphics::Create2DQuadDisplayList(displayList, -0.5f, 0.5f, -0.5f, 0.5f);
+
+	if (displayListSize == 0)
+	{
+		printf("Display list exceeded size.");
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		printf("Display list size: %u", displayListSize);
+	}
+
+	// Texture data and create texture object
+
+	uint16_t realWidth = render::vscreen->Width;
+	uint16_t realHeight = render::vscreen->Width;
+	uint16_t texWidth = 600;// utils::align(realWidth, 32);
+	uint16_t texHeight = 416;// utils::align(realHeight, 32);
+	printf("Real Texture %ux%u", realWidth, realHeight);
+	printf("Render Texture %ux%u", texWidth, texHeight);
+	uint32_t textureSize = wii_graphics::GetTextureSize(texWidth, texHeight, GX_TF_RGBA8, 0, 0);
+	GXTexObj textureObject;
+	uint8_t *textureData = (uint8_t *)memalign(32, textureSize);
+	memset(textureData, 0, textureSize);
+	wii_graphics::CreateTextureObject(&textureObject, textureData, texWidth, texHeight, GX_TF_RGBA8, GX_CLAMP, GX_NEAR);
+	wii_graphics::LoadTextureObject(&textureObject, GX_TEXMAP0);
+
+	uint32_t frame = 0;
+
+	// Initialize input
+
+	WPAD_Init();
 
 	pb::reset_table();
 	pb::firsttime_setup();
@@ -194,6 +137,185 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	int previousHatState[hatCount];
 	for (int h = 0; h < hatCount; h++)
 		previousHatState[h] = SDL_HAT_CENTERED;
+
+	bQuit = false;
+
+	while (!bQuit)
+	{
+		WPAD_ScanPads();
+
+		if (WPAD_ButtonsDown(0) & WPAD_BUTTON_HOME)
+			break;
+
+		GX_InvalidateTexAll();
+
+		frame++;
+
+		// Input
+
+		SDL_JoystickUpdate();
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			event_handler(&event);
+		}
+
+		// SDL_Wii way of handling the DPAD
+
+		for (int h = 0; h < hatCount; h++)
+		{
+			int hatState = SDL_JoystickGetHat(Joystick, h);
+			if (previousHatState[h] == hatState)
+				continue;
+			previousHatState[h] = hatState;
+
+			switch (hatState)
+			{
+			case SDL_HAT_UP:
+				pb::keydown(PAD_DPAD_UP);
+				break;
+			case SDL_HAT_RIGHT:
+				pb::keydown(PAD_DPAD_RIGHT);
+				break;
+			case SDL_HAT_LEFT:
+				pb::keydown(PAD_DPAD_LEFT);
+				break;
+			default:
+				pb::keyup(PAD_DPAD_LEFT);
+				pb::keyup(PAD_DPAD_RIGHT);
+				pb::keyup(PAD_DPAD_UP);
+				break;
+			}
+		}
+
+		// Update game
+
+		if (!single_step)
+		{
+			pb::frame(1000.0f / 60.0f);
+		}
+
+		// Render game to texture
+
+		uint32_t srcOffset = 0;
+		uint32_t dstOffset = 0;
+		uint32_t dstX = 0, dstY = 0;
+
+		//ARGBPixel* sPtr, VoidPtr blockAddr, int width
+
+		// for (int y = 0; y < 4 * 4; y++, srcOffset += realWidth * 4)
+		// {
+		// 	for (int x = 0; x < 4 * 4; dstOffset += 2)
+		// 	{
+		// 		textureData[dstOffset++] = render::vscreen->BmpBufPtr1[srcOffset++].rgba.Alpha;
+		// 		textureData[dstOffset++] = render::vscreen->BmpBufPtr1[srcOffset++].rgba.Red;
+		// 		textureData[dstOffset++] = render::vscreen->BmpBufPtr1[srcOffset++].rgba.Green;
+		// 		textureData[dstOffset++] = render::vscreen->BmpBufPtr1[srcOffset++].rgba.Blue;
+		// 	}
+		// }
+
+		uint8_t color = 0;
+		uint32_t cCounter = 0;
+
+		for (uint32_t y = 0; y < texHeight; y += 4)
+		{
+			for (uint32_t x = 0; x < texWidth; x += 4)
+			{
+				for (uint32_t ty = 0; ty < 4; ty++)
+				{
+					for (uint32_t tx = 0; tx < 4; tx++)
+					{
+						Rgba color = render::vscreen->BmpBufPtr1[(y + ty) * texWidth + (x + tx)].rgba;
+
+						textureData[dstOffset] = color.Alpha;
+						dstOffset++;
+
+						textureData[dstOffset] = color.Red;
+						dstOffset += 31;
+
+						textureData[dstOffset] = color.Green;
+						dstOffset++;
+
+						textureData[dstOffset] = color.Blue;
+						dstOffset -= 31;
+
+						if ((dstOffset & 31) == 0)
+							dstOffset += 32;
+					}
+				}
+			}
+		}
+
+		// for (;;)
+		// {
+
+		// 	textureData[dstOffset] = 255;
+		// 	dstOffset++;
+
+		// 	textureData[dstOffset] = color;
+		// 	dstOffset += 31;
+
+		// 	textureData[dstOffset] = color;
+		// 	dstOffset++;
+
+		// 	textureData[dstOffset] = color;
+		// 	dstOffset -= 31;
+
+		// 	srcOffset++;
+		// 	if (srcOffset)
+
+		// 		if ((dstOffset & 31) == 0)
+		// 			dstOffset += 32;
+
+		// 	if (dstOffset >= textureSize)
+		// 		break;
+		// }
+
+		// for (;;)
+		// {
+		// 	Rgba color = render::vscreen->BmpBufPtr1[srcOffset].rgba;
+
+		// 	textureData[dstOffset] = color.Alpha;
+		// 	dstOffset++;
+
+		// 	textureData[dstOffset] = color.Red;
+		// 	dstOffset += 31;
+
+		// 	textureData[dstOffset] = color.Green;
+		// 	dstOffset++;
+
+		// 	textureData[dstOffset] = color.Blue;
+		// 	dstOffset -= 31;
+
+		// 	srcOffset++;
+
+		// 	if ((dstOffset & 31) == 0)
+		// 		dstOffset += 32;
+
+		// 	if (dstOffset >= textureSize)
+		// 		break;
+		// }
+
+		// It's necessary to flush the data cache of the texture after modifying its pixels
+
+		wii_graphics::FlushDataCache(textureData, textureSize);
+
+		// Render fullscreen quad
+
+		wii_graphics::CallDisplayList(displayList, displayListSize);
+		wii_graphics::SwapBuffers();
+	}
+
+	return 0;
+
+	// SDL init
+	// if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
+	// {
+	// 	fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
+	// 	SDL_Delay(5000);
+	// 	exit(EXIT_FAILURE);
+	// }
 
 	while (true)
 	{
@@ -314,7 +436,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		// if (UpdateToFrameCounter >= UpdateToFrameRatio)
 		// {
 
-		render::PresentVScreen();
+		//render::PresentVScreen();
 
 		//frameCounter++;
 		// UpdateToFrameCounter -= UpdateToFrameRatio;

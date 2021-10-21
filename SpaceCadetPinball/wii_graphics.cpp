@@ -138,19 +138,19 @@ uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, flo
     GX_Begin(GX_TRIANGLESTRIP, GX_VTXFMT0, 4);
     GX_Position3f32(left, top, 0.0f);
     //GX_Color3f32(1.0f, 0.0f, 0.0f);
-    GX_TexCoord2f32(0.0f, 1.0f);
+    GX_TexCoord2f32(0.0f, 0.0f);
 
     GX_Position3f32(right, top, 0.0f);
     //GX_Color3f32(0.0f, 1.0f, 0.0f);
-    GX_TexCoord2f32(1.0f, 1.0f);
+    GX_TexCoord2f32(1.0f, 0.0f);
 
     GX_Position3f32(left, bottom, 0.0f);
     //GX_Color3f32(0.0f, 0.0f, 1.0f);
-    GX_TexCoord2f32(0.0f, 0.0f);
+    GX_TexCoord2f32(0.0f, 1.0f);
 
     GX_Position3f32(right, bottom, 0.0f);
     //GX_Color3f32(1.0f, 1.0f, 1.0f);
-    GX_TexCoord2f32(1.0f, 0.0f);
+    GX_TexCoord2f32(1.0f, 1.0f);
 
     GX_End();
 

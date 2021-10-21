@@ -15,8 +15,6 @@ float render::zscaler, render::zmin, render::zmax;
 rectangle_type render::vscreen_rect;
 gdrv_bitmap8 *render::vscreen, *render::background_bitmap, *render::ball_bitmap[20];
 zmap_header_type* render::zscreen;
-SDL_Surface* render::vScreenTex = nullptr;
-SDL_Rect render::DestinationRect{};
 
 void render::init(gdrv_bitmap8* bmp, float zMin, float zScaler, int width, int height)
 {
@@ -40,25 +38,6 @@ void render::init(gdrv_bitmap8* bmp, float zMin, float zScaler, int width, int h
 		gdrv::copy_bitmap(vscreen, width, height, 0, 0, bmp, 0, 0);
 	else
 		gdrv::fill_bitmap(vscreen, vscreen->Width, vscreen->Height, 0, 0, 0);
-
-	vScreenTex = SDL_CreateRGBSurface
-	(
-		0,
-		width,
-		height,
-		32,
-#if BIG_ENDIAN
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00,
-		0x000000ff
-#else
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-#endif
-	);
 }
 
 void render::uninit()
@@ -74,7 +53,6 @@ void render::uninit()
 	ball_list.clear();
 	dirty_list.clear();
 	sprite_list.clear();
-	SDL_FreeSurface(vScreenTex);
 }
 
 void render::update()
@@ -438,84 +416,4 @@ void render::build_occlude_list()
 	}
 
 	delete spriteArr;
-}
-
-void render::BlitVScreen()
-{
-	if (SDL_LockSurface(vScreenTex) < 0)
-	{
-		fprintf(stderr, "Error in SDL_LockSurface: %s\n", SDL_GetError());
-		exit(EXIT_FAILURE);
-	}
-
-	ColorRgba *lockedPixels = (ColorRgba *)vScreenTex->pixels;
-
-	assertm(static_cast<unsigned>(vScreenTex->pitch) == vscreen->Width * sizeof(ColorRgba), "Padding on vScreen texture");
-	if (offset_x == 0 && offset_y == 0)
-	{
-		// No offset - direct copy
-		std::memcpy(lockedPixels, vscreen->BmpBufPtr1, vscreen->Width * vscreen->Height * sizeof(ColorRgba));
-	}
-	else
-	{
-		// Copy offset table and fixed side bar
-		auto tableWidth = pb::MainTable->Width;
-		auto scoreWidth = vscreen->Width - pb::MainTable->Width;
-		auto tableStride = tableWidth * sizeof(ColorRgba);
-		auto scoreStride = scoreWidth * sizeof(ColorRgba);
-		auto srcScorePtr = &vscreen->BmpBufPtr1[tableWidth];
-
-		auto xSrc = 0, ySrc = 0, xDst = offset_x, yDst = offset_y, height = vscreen->Height;
-
-		// Negative dst == positive src offset
-		if (xDst < 0)
-		{
-			xSrc -= xDst;
-			xDst = 0;
-		}
-		if (yDst < 0)
-		{
-			ySrc -= yDst;
-			yDst = 0;
-		}
-
-		if (xSrc)
-		{
-			tableStride -= xSrc * sizeof(ColorRgba);
-		}
-		if (xDst)
-		{
-			tableStride -= xDst * sizeof(ColorRgba);
-			tableWidth -= xDst;
-			scoreWidth += xDst;
-		}
-		if (ySrc)
-			height -= ySrc;
-
-		auto srcBmpPtr = &vscreen->BmpBufPtr1[vscreen->Width * ySrc + xSrc];
-		auto dstPtr = &lockedPixels[vscreen->Width * yDst + xDst];
-		for (int y = height; y > 0; --y)
-		{
-			std::memcpy(dstPtr, srcBmpPtr, tableStride);
-			dstPtr += tableWidth;
-			std::memcpy(dstPtr, srcScorePtr, scoreStride);
-			dstPtr += scoreWidth;
-
-			srcBmpPtr += vscreen->Stride;
-			srcScorePtr += vscreen->Stride;
-		}
-	}
-
-	SDL_UnlockSurface(vScreenTex);
-}
-
-void render::PresentVScreen()
-{
-	BlitVScreen();
-
-	if (SDL_BlitSurface(vScreenTex, NULL, winmain::ScreenSurface, NULL) < 0)
-	{
-		fprintf(stderr, "Error in SDL_BlitSurface: %s\n", SDL_GetError());
-		exit(EXIT_FAILURE);
-	}
 }

@@ -20,11 +20,9 @@ public:
 	static int16_t OffsetX;
 	static int16_t OffsetY;
 
-	static void init();
 	static int GetResolution();
 	static void SetResolution(int value);
 	static int GetMaxResolution();
-	static void window_size_changed();
 private :
 	static int resolution;
 };

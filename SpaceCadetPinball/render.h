@@ -31,7 +31,6 @@ class render
 {
 public:
 	static gdrv_bitmap8 *vscreen, *background_bitmap;
-	static SDL_Rect DestinationRect;
 
 	static void init(gdrv_bitmap8* bmp, float zMin, float zScaler, int width, int height);
 	static void uninit();
@@ -49,7 +48,6 @@ public:
 	static void ball_set(render_sprite_type_struct* sprite, gdrv_bitmap8* bmp, float depth, int xPos, int yPos);
 	static void shift(int offsetX, int offsetY);
 	static void build_occlude_list();
-	static void PresentVScreen();
 private:
 	static std::vector<render_sprite_type_struct*> dirty_list, sprite_list, ball_list;
 	static zmap_header_type* background_zmap;
@@ -58,10 +56,8 @@ private:
 	static rectangle_type vscreen_rect;
 	static gdrv_bitmap8 *ball_bitmap[20];
 	static zmap_header_type* zscreen;
-	static SDL_Surface* vScreenTex;
 
 	static void repaint(struct render_sprite_type_struct* sprite);
 	static void paint_balls();
 	static void unpaint_balls();
-	static void BlitVScreen();
 };

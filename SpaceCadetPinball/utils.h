@@ -10,4 +10,5 @@ public:
     static int16_t swap_i16(const int16_t value);
     static uint16_t swap_u16(const uint16_t value);
     static float swap_float(const float value);
+    static uint16_t align(const uint16_t value, const uint16_t alignment);
 };

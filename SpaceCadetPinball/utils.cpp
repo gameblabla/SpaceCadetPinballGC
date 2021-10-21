@@ -53,3 +53,9 @@ float utils::swap_float(const float value)
     return value;
 #endif
 }
+
+uint16_t utils::align(const uint16_t value, const uint16_t alignment)
+{
+    uint p = value % alignment;
+    return p == 0 ? value : value + (alignment - p);
+}
