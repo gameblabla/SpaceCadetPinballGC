@@ -52,12 +52,13 @@ void wii_graphics::Initialize()
     //     rmode->viYOrigin = (VI_MAX_HEIGHT_NTSC - rmode->viHeight) / 2;
     // }
 
-    // rmode->fbWidth = 480;
-    // rmode->viWidth = 512;
-    // rmode->efbHeight = 400;
-    // rmode->viHeight = 320;
-    // rmode->viXOrigin = (VI_MAX_WIDTH_NTSC - rmode->viWidth) >> 1;
-    // rmode->viYOrigin = (VI_MAX_HEIGHT_NTSC - rmode->viHeight) >> 1;
+    rmode->viWidth = 640;
+    rmode->viHeight = 448;
+    rmode->fbWidth = 640;
+    rmode->efbHeight = 448;
+    rmode->xfbHeight = 448;
+    rmode->viXOrigin = (VI_MAX_WIDTH_NTSC - rmode->viWidth) >> 1;
+    rmode->viYOrigin = (VI_MAX_HEIGHT_NTSC - rmode->viHeight) >> 1;
 
     // Set some video properties
 

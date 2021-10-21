@@ -230,6 +230,10 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	pb::uninit();
 	Sound::Close();
 
+	free(boardDisplayList);
+	free(sidebarDisplayList);
+	free(textureData);
+
 	printf("Finished uninitializing.");
 
 	return 0;
