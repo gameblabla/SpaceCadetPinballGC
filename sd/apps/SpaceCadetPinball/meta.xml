@@ -3,7 +3,23 @@
 	<name>3D Pinball Space Cadet</name>
 	<coder>PacoChan</coder>
 	<version>0.1</version>
-	<release_date>20211018000000</release_date>
+	<release_date>20211022000000</release_date>
 	<short_description>3D Pinball for Wii - Space Cadet</short_description>
-	<long_description>Port of the 3D Pinball - Space Cadet that came bundled with Windows from Windows 95 until Windows XP.</long_description>
+	<long_description>Port of the 3D Pinball - Space Cadet that came bundled with Windows from Windows 95 until Windows XP.
+
+Wii Remote Controls:
+  A: Launch the ball
+  Z: Move the left paddle
+  B: Move the right paddle
+  DPAD Left, Right, Up Bump table
+  -: Start a new game
+  +: Pause
+
+GameCube Pad Controls:
+   A: Launch the ball
+   L: Move the left paddle
+   R: Move the right paddle
+   DPAD Left, Right, Up: Bump table
+   Y: Start a new game
+   Start: Pause</long_description>
 </app>
