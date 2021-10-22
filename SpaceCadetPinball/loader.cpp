@@ -6,6 +6,7 @@
 #include "Sound.h"
 #include "zdrv.h"
 #include "math.h"
+#include "utils.h"
 
 errorMsg loader::loader_errors[] =
 {
@@ -164,6 +165,18 @@ int loader::get_sound_id(int groupIndex)
 				{
 					fread(&wavHeader, 1, sizeof wavHeader, file);
 					fclose(file);
+
+#if BIG_ENDIAN
+					wavHeader.overall_size = utils::swap_i32(wavHeader.overall_size);
+					wavHeader.length_of_fmt = utils::swap_i32(wavHeader.length_of_fmt);
+					wavHeader.format_type = utils::swap_i16(wavHeader.format_type);
+					wavHeader.channels = utils::swap_i16(wavHeader.channels);
+					wavHeader.sample_rate = utils::swap_i32(wavHeader.sample_rate);
+					wavHeader.byterate = utils::swap_i32(wavHeader.byterate);
+					wavHeader.block_align = utils::swap_i16(wavHeader.block_align);
+					wavHeader.bits_per_sample = utils::swap_i16(wavHeader.bits_per_sample);
+					wavHeader.data_size = utils::swap_i32(wavHeader.data_size);
+#endif
 				}
 
 				auto sampleCount = wavHeader.data_size / (wavHeader.channels * (wavHeader.bits_per_sample / 8.0));
