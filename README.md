@@ -1,16 +1,15 @@
 # 3D Pinball - Space Cadet for Wii
 
-This is a port of 3D Pinball - Space Cadet for Nintendo Wii. It's originally a game that came bundled with Windows from Windows 95 up to Windows XP. It's still in early stages. This is the current state of the project:
+This is a port of 3D Pinball - Space Cadet for Nintendo Wii. It's originally a game that came bundled with Windows from Windows 95 up to Windows XP. This is the current state of the project:
 
 - No menus, options, or results screen.
-- Playable with the Wii remote.
-- It plays sound effects and music.
-- There are some visual glitches.
-- The game runs slow, at around 30fps.
+- Playable with the Wii remote and the GameCube pad.
+- It plays sound effects and music (if the player supplies the music in OGG format).
+- There are still some bugs here and there, but it's perfectly playable.
 
 It is based on the PC decompilation made by [k4zmu2a](https://github.com/k4zmu2a): https://github.com/k4zmu2a/SpaceCadetPinball
 
-The PC decompilation uses SDL2 to render the game. This Wii port has been changed to use SDL1 due to SDL2 not being available for Wii. I'm considering discarding SDL and implement low level GPU rendering, as SDL for Wii is considered incomplete, doesn't use the GPU too much and it's part of the reason why this port runs slow.
+The PC decompilation uses SDL2 to render the game. This Wii port has been changed to use native GPU rendering with the GX library, as SDL for Wii is considered incomplete, doesn't use the GPU too much and it was really slow.
 
 I also made the required changes to make the original game's binary assets work in this port. The Wii's CPU is big endian, instead of little endian like PC x86. These changes could be useful for porting to other big endian devices.
 
@@ -58,6 +57,7 @@ After a successful build, you will get a file called `SpaceCadetPinball.dol`, wh
 3. Copy `boot.dol` to `apps/SpaceCadetPinball/` in your SD card.
 4. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
 5. Copy all PC game's assets to `apps/SpaceCadetPinball/Data/` in your SD card.
+6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `Data` folder.
 6. If everything went fine, you should be able to see the game in your homebrew channel and run it.
 
 ### Dolphin
@@ -65,7 +65,7 @@ After a successful build, you will get a file called `SpaceCadetPinball.dol`, wh
 1. Get the [Dolphin emulator](https://dolphin-emu.org) if you don't have it.
 2. Create and edit a virtual SD card following [these instructions](https://wiki.dolphin-emu.org/index.php?title=Virtual_SD_Card_Guide).
 3. Mount that virtual card.
-4. Follow the steps 4 and 5 in `Wii with homebrew channel` section.
+4. Follow the steps 4, 5 and 6 in `Wii with homebrew channel` section.
 5. Unmount the SD card, as Dolphin won't be able to access its contents while it's mounted.
 6. Open Dolphin, go to `Config`, then to the `Audio` tab, and select `DSP LLE REcompiler (slow)`. Audio won't work without that.
 7. Go to `Graphics` settings, then to the `Hacks` tab, and move the `Accuracy` slider all the way to the left to set it as `Safe`.
@@ -75,6 +75,7 @@ After a successful build, you will get a file called `SpaceCadetPinball.dol`, wh
 
 ## How to play
 
+### Wii Remote
 ```
 A                    :  Launch the ball
 Z                    :  Move the left paddle
@@ -84,8 +85,18 @@ DPAD Left, Right, Up :  Bump table
 +                    :  Pause
 ```
 
+### GameCube Pad
+```
+A                    :  Launch the ball
+L                    :  Move the left paddle
+R                    :  Move the right paddle
+DPAD Left, Right, Up :  Bump table
+Y                    :  Start a new game
+Start                :  Pause
+```
+
 ## Screenshots
 
 <p align="center">
-  <img title="3D Pinball - Space Cadet running on Dolphin Emulator" src="/screenshot00.png">
+  <img title="3D Pinball - Space Cadet for Wii running on Dolphin Emulator" src="/screenshot00.png">
 </p>
