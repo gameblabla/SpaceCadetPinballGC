@@ -29,8 +29,8 @@
 
 TPinballTable* pb::MainTable = nullptr;
 DatFile* pb::record_table = nullptr;
-int pb::time_ticks = 0, pb::demo_mode = 0, pb::game_mode = 2, pb::mode_countdown_;
-float pb::time_now = 0, pb::time_next = 0, pb::ball_speed_limit, pb::time_ticks_remainder = 0;
+int pb::time_ticks = 0, pb::demo_mode = 0, pb::game_mode = 2;
+float pb::mode_countdown_, pb::time_now = 0, pb::time_next = 0, pb::ball_speed_limit, pb::time_ticks_remainder = 0;
 high_score_struct pb::highscore_table[5];
 bool pb::FullTiltMode = false, pb::cheat_mode = false;
 
@@ -169,7 +169,7 @@ void pb::mode_change(int mode)
 	case 4:
 		winmain::LaunchBallEnabled = false;
 		winmain::HighScoresEnabled = false;
-		mode_countdown_ = 5000;
+		mode_countdown_ = 5000.f;
 		break;
 	}
 	game_mode = mode;
@@ -215,7 +215,7 @@ void pb::frame(float dtMilliSec)
 {
 	if (dtMilliSec > 100)
 		dtMilliSec = 100;
-	if (dtMilliSec < 0)
+	if (dtMilliSec <= 0)
 		return;
 	float dtSec = dtMilliSec * 0.001f;
 	if (!mode_countdown(dtMilliSec))
@@ -317,7 +317,7 @@ void pb::window_size(int* width, int* height)
 
 void pb::pause_continue()
 {
-	winmain::single_step = winmain::single_step == 0;
+	winmain::single_step ^= true;
 	pinball::InfoTextBox->Clear();
 	pinball::MissTextBox->Clear();
 	if (winmain::single_step)
@@ -401,7 +401,7 @@ void pb::keydown(uint32_t wiiButton, uint32_t gcButton)
 
 	if (game_mode != 1)
 	{
-		mode_countdown(-1);
+		mode_countdown(-1.f);
 		return;
 	}
 
@@ -491,7 +491,7 @@ void pb::keydown(uint32_t wiiButton, uint32_t gcButton)
 	// }
 }
 
-int pb::mode_countdown(int time)
+int pb::mode_countdown(float time)
 {
 	if (!game_mode || game_mode <= 0)
 		return 1;
@@ -500,13 +500,13 @@ int pb::mode_countdown(int time)
 		if (game_mode == 3)
 		{
 			mode_countdown_ -= time;
-			if (mode_countdown_ < 0 || time < 0)
+			if (mode_countdown_ < 0.f || time < 0.f)
 				mode_change(4);
 		}
 		else if (game_mode == 4)
 		{
 			mode_countdown_ -= time;
-			if (mode_countdown_ < 0 || time < 0)
+			if (mode_countdown_ < 0.f || time < 0.f)
 				mode_change(1);
 		}
 		return 1;
@@ -538,7 +538,7 @@ void pb::end_game()
 
 	for (auto i = 0; i < playerCount; ++i)
 	{
-		for (auto j = i; j < playerCount; ++j)
+		for (auto j = i + 1; j < playerCount; ++j)
 		{
 			if (scores[j] > scores[i])
 			{

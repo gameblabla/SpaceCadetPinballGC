@@ -32,7 +32,7 @@ public:
 	static void loose_focus();
 	static void keyup(uint32_t wiiButton, uint32_t gcButton);
 	static void keydown(uint32_t wiiButton, uint32_t gcButton);
-	static int mode_countdown(int time);
+	static int mode_countdown(float time);
 	static void launch_ball();
 	static void end_game();
 	static void high_scores();
@@ -41,5 +41,6 @@ public:
 	static float collide(float timeNow, float timeDelta, TBall* ball);
 	static void PushCheat(const std::string& cheat);
 private:
-	static int demo_mode, mode_countdown_;
+	static int demo_mode;
+	static float mode_countdown_;
 };

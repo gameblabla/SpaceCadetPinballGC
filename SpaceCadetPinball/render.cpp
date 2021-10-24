@@ -415,7 +415,7 @@ void render::build_occlude_list()
 				}
 			}
 
-			if (!mainSprite->UnknownFlag && mainSprite->Bmp && spriteArr->size() < 2)
+			if (mainSprite->Bmp && spriteArr->size() < 2)
 				spriteArr->clear();
 			if (!spriteArr->empty())
 			{
