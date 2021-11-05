@@ -82,7 +82,6 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	uint16_t texWidth = render::vscreen->Width;
 	uint16_t texHeight = render::vscreen->Height;
-	printf("Render Texture %ux%u", texWidth, texHeight);
 	uint32_t textureSize = wii_graphics::GetTextureSize(texWidth, texHeight, GX_TF_RGBA8, 0, 0);
 	GXTexObj textureObject;
 	uint8_t *textureData = (uint8_t *)memalign(32, textureSize);
@@ -109,7 +108,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	}
 	else
 	{
-		printf("Board display list size: %u", boardDisplayListSize);
+		printf("Board display list size: %u\n", boardDisplayListSize);
 	}
 
 	void *sidebarDisplayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
@@ -121,7 +120,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	}
 	else
 	{
-		printf("Sidebar display list size: %u", sidebarDisplayListSize);
+		printf("Sidebar display list size: %u\n", sidebarDisplayListSize);
 	}
 
 	// Initialize game
@@ -217,7 +216,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		wii_graphics::SwapBuffers();
 	}
 
-	printf("Uninitializing...");
+	printf("Uninitializing...\n");
 
 	end_pause();
 
@@ -230,7 +229,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	free(sidebarDisplayList);
 	free(textureData);
 
-	printf("Finished uninitializing.");
+	printf("Finished uninitializing.\n");
 
 	return 0;
 }
@@ -279,12 +278,14 @@ void winmain::PrintFatalError(const char *message, ...)
 	wii_graphics::InitializeConsole();
 	wii_graphics::SetNextFramebuffer(0);
 
+	printf("\x1b[4;4H");
+
 	va_list args;
 	va_start(args, message);
 	vprintf(message, args);
 	va_end(args);
 
-	printf("\n\nPress A to exit.");
+	printf("\x1b[16;30HPress A to exit.");
 
 	while (true)
 	{
