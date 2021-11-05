@@ -9,7 +9,8 @@
 void *wii_graphics::gpFifo = nullptr;
 void *wii_graphics::frameBuffer[2] = {nullptr, nullptr};
 GXRModeObj *wii_graphics::rmode = nullptr;
-uint32_t wii_graphics::currentFramebuffer = 0;
+uint8_t wii_graphics::currentFramebuffer = 0;
+bool wii_graphics::isConsoleInitialized = false;
 
 void wii_graphics::Initialize()
 {
@@ -20,13 +21,13 @@ void wii_graphics::Initialize()
     // Get video mode and allocate 2 framebuffers
 
     rmode = VIDEO_GetPreferredMode(NULL);
-    printf("Framebuffer: %ux%u", rmode->fbWidth, rmode->efbHeight);
-    printf("VI: %ux%u", rmode->viWidth, rmode->viHeight);
-    printf("TV Mode: %u", rmode->viTVMode);
-    printf("XFB Mode: %u", rmode->xfbMode);
-    printf("XFB Height: %u", rmode->xfbHeight);
-    printf("Antialiasing: %u", rmode->aa);
-    printf("Field rendering: %u", rmode->field_rendering);
+    printf("Framebuffer: %ux%u\n", rmode->fbWidth, rmode->efbHeight);
+    printf("VI: %ux%u\n", rmode->viWidth, rmode->viHeight);
+    printf("TV Mode: %u\n", rmode->viTVMode);
+    printf("XFB Mode: %u\n", rmode->xfbMode);
+    printf("XFB Height: %u\n", rmode->xfbHeight);
+    printf("Antialiasing: %u\n", rmode->aa);
+    printf("Field rendering: %u\n\n", rmode->field_rendering);
 
     frameBuffer[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
     frameBuffer[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
@@ -223,8 +224,23 @@ void wii_graphics::SwapBuffers()
 {
     GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
     GX_DrawDone();
-    VIDEO_SetNextFramebuffer(frameBuffer[currentFramebuffer]);
+    SetNextFramebuffer(currentFramebuffer);
     VIDEO_Flush();
     VIDEO_WaitVSync();
     currentFramebuffer ^= 1;
+}
+
+void wii_graphics::SetNextFramebuffer(uint8_t framebufferIndex)
+{
+    VIDEO_SetNextFramebuffer(frameBuffer[framebufferIndex]);
+}
+
+void wii_graphics::InitializeConsole()
+{
+    if (isConsoleInitialized)
+        return;
+
+    //console_init(frameBuffer[0], 200, 200, rmode->fbWidth, rmode->xfbHeight, rmode->fbWidth * VI_DISPLAY_PIX_SZ);
+    SYS_ConsoleInit(rmode, 32, 32, rmode->fbWidth, rmode->xfbHeight);
+    isConsoleInitialized = true;
 }

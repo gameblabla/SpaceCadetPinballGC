@@ -11,7 +11,8 @@ private:
     static void *gpFifo;
     static void *frameBuffer[2];
     static GXRModeObj *rmode;
-    static uint32_t currentFramebuffer;
+    static uint8_t currentFramebuffer;
+    static bool isConsoleInitialized;
 
 public:
     static void Initialize();
@@ -24,4 +25,7 @@ public:
     static uint32_t GetTextureSize(uint16_t width, uint16_t height, uint32_t format, uint8_t mipmap, uint8_t maxlod);
     static void FlushDataCache(void *startAddress, uint32_t size);
     static void SwapBuffers();
+    static void SetNextFramebuffer(uint8_t framebufferIndex);
+
+    static void InitializeConsole();
 };

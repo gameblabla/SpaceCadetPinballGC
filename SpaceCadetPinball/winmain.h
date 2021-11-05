@@ -30,7 +30,7 @@ public:
 	static char* BasePath;
 
 	static int WinMain(LPCSTR lpCmdLine);
-	[[ noreturn ]] static void memalloc_failure();
+	static void memalloc_failure();
 	static void end_pause();
 	static void new_game();
 	static void pause();
@@ -43,4 +43,6 @@ private:
 	static double UpdateToFrameRatio;
 	static DurationMs TargetFrameTime;
 	static struct optionsStruct& Options;
+
+	static void PrintFatalError(const char *message, ...);
 };

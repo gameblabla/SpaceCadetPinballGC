@@ -39,6 +39,13 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 {
 	std::set_new_handler(memalloc_failure);
 
+	// Initialize graphics and input
+
+	wii_graphics::Initialize();
+	wii_input::Initialize();
+
+	// Set the base path for PINBALL.DAT
+
 	BasePath = (char *)"sd:/apps/SpaceCadetPinball/Data/";
 
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
@@ -67,14 +74,9 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		if (pb::init())
 		{
-			fprintf(stderr, "Could not load game data: The .dat file is missing");
-			exit(EXIT_FAILURE);
+			PrintFatalError("Could not load game data: %s file is missing.\n", DatFileName.c_str());
 		}
 	}
-
-	// Initialize graphics
-
-	wii_graphics::Initialize();
 
 	// Texture data and create texture object
 
@@ -103,8 +105,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	if (boardDisplayListSize == 0)
 	{
-		printf("Board display list exceeded size.");
-		exit(EXIT_FAILURE);
+		PrintFatalError("Board display list exceeded size.\n");
 	}
 	else
 	{
@@ -116,17 +117,12 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	if (sidebarDisplayListSize == 0)
 	{
-		printf("Sidebar display list exceeded size.");
-		exit(EXIT_FAILURE);
+		PrintFatalError("Sidebar display list exceeded size.\n");
 	}
 	else
 	{
 		printf("Sidebar display list size: %u", sidebarDisplayListSize);
 	}
-
-	// Initialize input
-
-	wii_input::Initialize();
 
 	// Initialize game
 
@@ -245,8 +241,8 @@ void winmain::memalloc_failure()
 	Sound::Close();
 	char *caption = pinball::get_rc_string(170, 0);
 	char *text = pinball::get_rc_string(179, 0);
-	fprintf(stderr, "%s %s\n", caption, text);
-	exit(EXIT_FAILURE);
+
+	PrintFatalError("%s %s\n", caption, text);
 }
 
 void winmain::end_pause()
@@ -276,4 +272,38 @@ void winmain::UpdateFrameRate()
 	auto fps = Options.FramesPerSecond, ups = Options.UpdatesPerSecond;
 	UpdateToFrameRatio = static_cast<double>(ups) / fps;
 	TargetFrameTime = DurationMs(1000.0 / ups);
+}
+
+void winmain::PrintFatalError(const char *message, ...)
+{
+	wii_graphics::InitializeConsole();
+	wii_graphics::SetNextFramebuffer(0);
+
+	va_list args;
+	va_start(args, message);
+	vprintf(message, args);
+	va_end(args);
+
+	printf("\n\nPress A to exit.");
+
+	while (true)
+	{
+		wii_input::ScanPads();
+
+		uint32_t wiiButtonsDown = wii_input::GetWiiButtonsDown(0);
+		uint32_t gcButtonsDown = wii_input::GetGCButtonsDown(0);
+
+		if ((wiiButtonsDown & WPAD_BUTTON_A) || (gcButtonsDown & PAD_BUTTON_A))
+			break;
+
+		VIDEO_Flush();
+		VIDEO_WaitVSync();
+	}
+
+	VIDEO_SetBlack(true);
+	VIDEO_Flush();
+	VIDEO_WaitVSync();
+
+	exit(EXIT_FAILURE);
+	//svcBreak(USERBREAK_ASSERT);
 }
