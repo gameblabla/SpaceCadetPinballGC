@@ -64,7 +64,7 @@ void wii_graphics::Initialize()
     // Set some video properties
 
     VIDEO_Configure(rmode);
-    VIDEO_SetNextFramebuffer(frameBuffer[currentFramebuffer]);
+    SetNextFramebuffer(currentFramebuffer);
     VIDEO_SetBlack(FALSE);
     VIDEO_Flush();
     VIDEO_WaitVSync();
@@ -114,6 +114,8 @@ void wii_graphics::Initialize()
     //GX_SetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
     GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
     GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
+
+    SwapBuffers();
 }
 
 void wii_graphics::LoadOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far)
@@ -241,6 +243,6 @@ void wii_graphics::InitializeConsole()
         return;
 
     //console_init(frameBuffer[0], 200, 200, rmode->fbWidth, rmode->xfbHeight, rmode->fbWidth * VI_DISPLAY_PIX_SZ);
-    SYS_ConsoleInit(rmode, 32, 32, rmode->fbWidth, rmode->xfbHeight);
+    SYS_ConsoleInit(rmode, 0, 0, rmode->fbWidth, rmode->xfbHeight);
     isConsoleInitialized = true;
 }
