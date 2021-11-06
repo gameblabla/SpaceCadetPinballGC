@@ -7,6 +7,7 @@
 #include "pb.h"
 #include "pinball.h"
 #include "utils.h"
+#include "winmain.h"
 #include "zdrv.h"
 
 
@@ -474,6 +475,12 @@ void DatFile::Finalize()
 
 			auto file = pinball::make_path_name("PINBALL2.MID");
 			auto fileHandle = fopen(file.c_str(), "rb");
+
+			if (fileHandle == nullptr)
+			{
+				winmain::PrintFatalError("pinball.exe and PINBALL2.MID have not been found.");
+			}
+
 			fseek(fileHandle, 0, SEEK_END);
 			auto fileSize = static_cast<uint32_t>(ftell(fileHandle));
 			rcData = reinterpret_cast<MsgFont *>(new uint8_t[fileSize]);

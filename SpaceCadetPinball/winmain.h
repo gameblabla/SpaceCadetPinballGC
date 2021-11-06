@@ -27,7 +27,7 @@ public:
 	static bool LaunchBallEnabled;
 	static bool HighScoresEnabled;
 	static bool DemoActive;
-	static char* BasePath;
+	static char *BasePath;
 
 	static int WinMain(LPCSTR lpCmdLine);
 	static void memalloc_failure();
@@ -35,6 +35,8 @@ public:
 	static void new_game();
 	static void pause();
 	static void UpdateFrameRate();
+	static void PrintFatalError(const char *message, ...);
+
 private:
 	static int bQuit, DispFrameRate, DispGRhistory, activated;
 	static int mouse_down, last_mouse_x, last_mouse_y, no_time_loss;
@@ -42,7 +44,5 @@ private:
 	static bool ShowSpriteViewer;
 	static double UpdateToFrameRatio;
 	static DurationMs TargetFrameTime;
-	static struct optionsStruct& Options;
-
-	static void PrintFatalError(const char *message, ...);
+	static struct optionsStruct &Options;
 };
