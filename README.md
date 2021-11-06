@@ -57,8 +57,8 @@ After a successful build, you will get a file called `SpaceCadetPinball.dol`, wh
 3. Copy `boot.dol` to `apps/SpaceCadetPinball/` in your SD card.
 4. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
 5. Copy all PC game's assets to `apps/SpaceCadetPinball/Data/` in your SD card.
-6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `Data` folder.
-6. If everything went fine, you should be able to see the game in your homebrew channel and run it.
+6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `Data` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
+7. If everything went fine, you should be able to see the game in your homebrew channel and run it.
 
 ### Dolphin
 
