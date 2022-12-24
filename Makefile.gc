@@ -13,7 +13,7 @@ ifeq ($(strip $(DEVKITPPC)),)
 $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
 endif
 
-include $(DEVKITPPC)/wii_rules
+include $(DEVKITPPC)/gamecube_rules
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -21,7 +21,7 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
+TARGET		:=	$(notdir $(CURDIR))-gc
 BUILD		:=	build
 SOURCES		:=	SpaceCadetPinball
 DATA		:=
@@ -32,15 +32,15 @@ INCLUDES	:=
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS		=	-g -O2 -Wall $(MACHDEP) $(INCLUDE) -I/opt/devkitpro/libogc/include/SDL -I/opt/devkitpro/libogc/include
+CFLAGS		=	-Os -fdata-sections -ffunction-sections -flto -Wall $(MACHDEP) $(INCLUDE) -I/opt/devkitpro/libogc/include/SDL -I/opt/devkitpro/libogc/include
 CXXFLAGS	=	$(CFLAGS)
 
-LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+LDFLAGS		=	-flto -Wl,--as-needed -Wl,--gc-sections $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-Wl,--start-group -lSDL -lSDLmain -lvorbisfile -lvorbis -logg -laesnd -lfat -lwiikeyboard -lwiiuse -lbte -logc -lm -lSDL_mixer -Wl,--end-group
+LIBS	:= -lSDLmain -lSDL -lSDL_mixer -lmad -lvorbisfile -lvorbis -logg -laesnd -lfat -logc -lm -flto -s
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -109,7 +109,7 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.gc
 
 #---------------------------------------------------------------------------------
 clean:

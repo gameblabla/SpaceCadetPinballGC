@@ -45,9 +45,11 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	wii_input::Initialize();
 
 	// Set the base path for PINBALL.DAT
-
+#ifdef HW_DOL
+	BasePath = (char *)"/apps/SpaceCadetPinball/Data/";
+#else
 	BasePath = (char *)"sd:/apps/SpaceCadetPinball/Data/";
-
+#endif
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
 	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
 
